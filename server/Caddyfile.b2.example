@@ -1,0 +1,29 @@
+# B2: HTTP/3-capable static file server + WebSocket RVC proxied to the B1 Node process.
+#
+# Prerequisite: run B1 with static disabled so this instance owns HTTP(S) assets:
+#   B1_STATIC_ENABLED=0 B1_HTTP_PORT=7080 node server_b1_http_rvc.js
+#
+# Then from this directory:
+#   caddy run --config Caddyfile.b2.example
+#
+# Viewer hints:
+#   resourcesBaseUrl / gsResource: https://localhost:7443/  (adjust host; path must reach 20_lod/...)
+#   rcServerAddress: wss://localhost:7443/rvc
+#
+# Trust the same TLS certs you use for WebTransport (e.g. mkcert).
+
+{$B2_ADDR:localhost}:7443 {
+	tls ./certs/web3d.local.pem ./certs/web3d.local-key.pem
+
+	# RVC WebSocket -> Node B1 (must keep path /rvc for server_b1_http_rvc.js)
+	handle /rvc* {
+		reverse_proxy 127.0.0.1:7080
+	}
+
+	handle {
+		root * ../dataset/toy_example
+		header Access-Control-Allow-Origin *
+		header Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+		file_server
+	}
+}

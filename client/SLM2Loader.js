@@ -299,14 +299,22 @@ export class SLM2Loader
       }
 
       var newCameraHash = cameraPosHash + ':' + cameraRotHash;
+
+      const localCameraPosB1 = new Vector3();
+      localCameraPosB1.copy(this.activeCamera.position);
+      const invRootB1 =
+        this.rootScene && this.rootScene.matrixWorld ? this.rootScene.matrixWorld.clone().invert() : null;
+      if (invRootB1) localCameraPosB1.applyMatrix4(invRootB1);
+
       let camera_data = {
           "type": 0,
           "id": this.requestId,
           "mvp": mvp,
           "width": clientWidth, 
           "height": clientHeight,
-          "cull": 0, // 0: no cull, 1: front cull, 2: back cull
-          "hash": (this.rvCameraHash == null ? '0' : newCameraHash)
+          "cull": 0,
+          "hash": (this.rvCameraHash == null ? '0' : newCameraHash),
+          "cameraPos": [localCameraPosB1.x, localCameraPosB1.y, localCameraPosB1.z],
       };
 
       // Update with new hash

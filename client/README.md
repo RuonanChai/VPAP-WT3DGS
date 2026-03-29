@@ -4,7 +4,7 @@ These files are **reference extracts** from the full WebGL/WebGPU viewer. Integr
 
 | File | Role |
 |------|------|
-| `SLM2Loader.js` | WebTransport connect, camera bidirectional stream, unidirectional tile ingress, fair timing for telemetry |
+| `SLM2Loader.js` | WebTransport (B3/B4) **and** WebSocket RVC + HTTP GET splat pull (B1/B2); see **`HTTP_PULL_AND_RVC.md`** |
 | `TileTelemetry.js` | Per-tile lifecycle logging for exported experiment JSON |
 | `SpatioTemporalQoETracker.js` | Periodic QoE sampling (50 ms in this snapshot) and multi-term composition |
 

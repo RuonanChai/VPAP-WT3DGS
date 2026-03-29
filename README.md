@@ -18,50 +18,91 @@ This repository is a **standalone artifact**: VPAP scheduling on the **WebTransp
 
 ---
 
-## (b) Quick start
+## (b) Quick start — run each baseline
 
-### 1. Dataset (toy example)
-
-Populate `dataset/toy_example/` per `dataset/README.md` (splat files, mapping JSON, `reference_manifest.json`). You may start from `reference_manifest.example.json`.
-
-### 2. TLS material
-
-Place `web3d.local.pem` and `web3d.local-key.pem` under `server/certs/` (or set `VPAP_TLS_*` / `VPAP_CERT_DIR`).
-
-### 3. VPAP WebTransport server
+**Prerequisites (all baselines):** populate `dataset/toy_example/` per `dataset/README.md` (splats, `custom_bounding_boxes_mapping-campus2.json`, `reference_manifest.json`). For WebTransport (B3/B4), place TLS files under `server/certs/` (`web3d.local.pem`, `web3d.local-key.pem`) or set `VPAP_TLS_*` / `VPAP_CERT_DIR`.
 
 ```bash
 cd server
 npm install
-npm run start:vpap
 ```
 
-Default: UDP **8444**, path `/wt`. Assets default to `../dataset/toy_example` (override with `VPAP_ASSETS_DIR`).
+### B1 — HTTP/1.1 static + WebSocket RVC
 
-### 4. Flat-sendOrder baseline (ablation)
+Starts **HTTP/1.1** file server and a **WebSocket** RVC endpoint on the same port (default **7080**).
 
 ```bash
 cd server
-npm run start:baseline
+npm run start:b1
 ```
 
-Default: UDP **9444**, path `/wt`.
+- Static root: `../dataset/toy_example` (override with `VPAP_ASSETS_DIR`).
+- WebSocket URL path: **`/rvc`** (override with `B1_WS_PATH`).
+- **Viewer:** `rcServerAddress` = `ws://<host>:7080/rvc`, `resourcesBaseUrl` = `http://<host>:7080/`, `gsResource` = `http://<host>:7080/20_lod/`, `schedulingStrategy` ≠ `webtransport` and not a `webtransport://` URL.
 
-### 5. Client integration
+HTTP pull + RVC flow is summarized in **`client/HTTP_PULL_AND_RVC.md`**.
 
-The reference modules under `client/` are extracted from the full viewer:
+### B2 — HTTP/3 static + WSS (Caddy) + same RVC logic as B1
 
-- **`SLM2Loader.js`** — `WebTransport` session, bidirectional camera stream, `incomingUnidirectionalStreams` consumption, fair **TTFB** timestamps (`logicRequestStart` before `getReader()`), **`TileTelemetry`** hooks.
-- **`TileTelemetry.js`** — per-tile records (AAT / enqueue / first byte / complete).
-- **`SpatioTemporalQoETracker.js`** — time-sampled QoE (e.g. **50 ms** interval in this build) for paper metrics.
+B2 uses **Caddy** for **HTTP/3** static serving and proxies **`/rvc`** to the Node B1 WebSocket server.
 
-Integrate these into your bundled viewer or serve your full static build separately; point `rcServerAddress` to `webtransport://<host>:8444/wt` (VPAP) or `:9444` (baseline).
+**Terminal A — WebSocket only (no static files from Node):**
+
+```bash
+cd server
+# Linux / macOS / Git Bash
+B1_STATIC_ENABLED=0 B1_HTTP_PORT=7080 node server_b1_http_rvc.js
+```
+
+```cmd
+REM Windows CMD
+set B1_STATIC_ENABLED=0
+set B1_HTTP_PORT=7080
+node server_b1_http_rvc.js
+```
+
+**Terminal B — Caddy (edit `server/Caddyfile.b2.example` for host/certs if needed):**
+
+```bash
+cd server
+./scripts/start_b2_caddy.sh
+```
+
+On Windows: `powershell -ExecutionPolicy Bypass -File scripts\start_b2_caddy.ps1`
+
+- **Viewer:** `resourcesBaseUrl` / `gsResource` → `https://<host>:7443/…`, `rcServerAddress` → `wss://<host>:7443/rvc` (trust the same CA as in the Caddyfile).
+
+### B3 — WebTransport, flat `sendOrder` (native WT baseline)
+
+```bash
+cd server
+npm run start:b3
+```
+
+Default: UDP **9444**, path **`/wt`**. Client: `webtransport://<host>:9444/wt`, `schedulingStrategy: 'webtransport'`.
+
+### B4 — VPAP (WebTransport + viewport/LOD-aware `sendOrder`)
+
+```bash
+cd server
+npm run start:vpap
+```
+
+Default: UDP **8444**, path **`/wt`**. Client: `webtransport://<host>:8444/wt`, `schedulingStrategy: 'webtransport'`.
+
+### Client modules
+
+Under **`client/`**: **`SLM2Loader.js`** (WT + WebSocket + HTTP pull), **`TileTelemetry.js`**, **`SpatioTemporalQoETracker.js`**. Integrate into your viewer bundle; see **`client/README.md`** and **`client/HTTP_PULL_AND_RVC.md`**.
 
 ---
 
-## (c) Reproducing network limits
+## (c) Reproducing experiments — network / Mininet
 
-See `network_emulation/README.md` and `network_emulation/tc_shape_example.sh` for Linux **netem** delay/loss. For **Mininet**, apply equivalent shaping on the bottleneck link between server and client hosts. Document the same conditions for all baselines.
+See **`network_emulation/README.md`** and **`network_emulation/tc_shape_example.sh`** for Linux **netem** delay/loss.
+
+**Mininet:** we applied the **same** emulated network (bandwidth, delay, loss, queue discipline on the bottleneck between server and client) for **B1, B2, B3, and VPAP (B4)**. Only the server stack and client endpoints change across baselines; **do not** change `tc`/Mininet parameters between runs you intend to compare.
+
+For Mininet topology, place the tile server(s) and the browser host on the correct sides of the bottleneck and document the identical profile in your paper’s experimental setup section.
 
 ---
 
@@ -69,8 +110,8 @@ See `network_emulation/README.md` and `network_emulation/tc_shape_example.sh` fo
 
 | Directory | Contents |
 |-----------|----------|
-| **`server/`** | `server_vpap.js` (VPAP + `sendOrder`), `server_baseline_flat_sendorder.js`, `tileSelection.js`, `StreamMetrics.js`, `VPAP_SCHEDULING.md` |
-| **`client/`** | WebTransport receive path + `TileTelemetry` + `SpatioTemporalQoETracker` |
+| **`server/`** | `server_vpap.js` (B4), `server_baseline_flat_sendorder.js` (B3), **`server_b1_http_rvc.js` (B1)**, `Caddyfile.b2.example` + **`scripts/start_b2_caddy.*` (B2)**, `tileSelection.js`, `StreamMetrics.js`, `VPAP_SCHEDULING.md`, **`README.md`** |
+| **`client/`** | `SLM2Loader.js` (WT + WebSocket + HTTP pull), `TileTelemetry`, `SpatioTemporalQoETracker`, **`HTTP_PULL_AND_RVC.md`** |
 | **`network_emulation/`** | `tc` example + README |
 | **`dataset/`** | Toy layout, examples, **no large binaries** in git by default (see `.gitignore`) |
 | **`analysis_and_plotting/`** | `fig1_qoe/`, **`fig2_throughput/`** (`Fig2A_Throughput.py`, `Fig2B_Efficiency.py`), `fig3_cpu_memory/` — Matplotlib scripts (inputs: aggregated CSVs from your evaluation pipeline) |
