@@ -1,7 +1,5 @@
 # VPAP-WT3DGS — Viewport- and LOD-Aware Prioritization over WebTransport for Tiled 3D Gaussian Splatting
 
-**Paper placeholder URL:** `https://anonymous.4open.science/r/VPAP-xxxx` (replace with the link returned by [Anonymous GitHub](https://anonymous.4open.science) after you mirror a **public GitHub** repository).
-
 This repository is a **standalone artifact**: VPAP scheduling on the **WebTransport `sendOrder`** API, a matching **browser client** path (stream ingestion + telemetry), **network emulation** notes, a **toy dataset layout**, and **plotting scripts** aligned with the paper’s figures.
 
 ---
