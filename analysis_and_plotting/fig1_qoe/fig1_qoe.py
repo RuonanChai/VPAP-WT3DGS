@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""Fig1B: final QoE vs run index line chart -> Fig1B_QoE_Line_by_Run.pdf"""
 from __future__ import annotations
 
 from pathlib import Path

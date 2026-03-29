@@ -5,7 +5,7 @@ import {
   FileLoader,
   FloatType,
   ImageBitmapLoader,
-  Vector3, // 🔥 添加 Vector3 用于坐标转换
+  Vector3, // coordinate transforms
 } from 'three';
 
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
@@ -56,25 +56,20 @@ export class SLM2Loader
     this.modelToLoadList_GS = {};
     this.loadingTaskList_GS = [];
     this.tileIsLoading = false;
-    this.GSLoaderCount = 16; // 🔥 优化：增加并发加载数量，从8提升到16，加快初始加载速度
+    this.GSLoaderCount = 16; // concurrent GS decode workers
 
-    // 🔥 任务1：WebTransport 流消费节流（限制同时触发 addObject_GS 的并发数）
-    // 目标：避免大量 tile stream 在同一时刻完成后，短时间内并发触发 CacheMgr/GaussianSplattingMesh 合成，
-    // 从而造成主线程长任务与 QoE/fidelity “平顶”。
+    // Throttle WebTransport tile completion -> addObject_GS to reduce main-thread long tasks / GC stalls
     this._wtAddObjectInFlight = 0;
-    // 降低 addObject_GS 同时在主线程合成的并发，减少 Long Tasks/GC 抖动导致的 tile 处理排队
     this._wtAddObjectMaxInFlight = Math.max(2, Math.floor(this.GSLoaderCount / 4));
     this._wtAddObjectWaiters = [];
 
-    // WebTransport 相关属性
+    // WebTransport client state
     this.wt = null;
     this.wtStreamWriter = null;
     this.wtStreamReader = null;
     this.requestId = 0;
     
-    // 🔥 移除批量处理：立即处理 tile，利用 WebTransport 的并发优势
-    // 批量渲染虽然可以减少渲染调用，但引入了延迟，导致感觉更慢
-    // 改为立即处理，每个 tile 独立处理，不阻塞
+    // Process each WT tile immediately (lower latency than batching draws)
   }
 
   _wtAcquireAddObjectSlot() {
@@ -150,12 +145,12 @@ export class SLM2Loader
 
     this.backCamera.updateMatrixWorld();
     
-    // 🔥 B4 本地 RVC：按远近选 tile + 定 LOD，不依赖 WebTransport 服务器
+    // B4 local RVC: client-side tile + LOD selection (no WT server scheduling)
     if (this.useLocalRVC) {
       this.sceneCullingLocal();
       return;
     }
-    // WebTransport 模式（B3 全部加载）：持续检测相机变化并发送更新
+    // WebTransport (B3/B4): stream camera updates to server
     if (this.schedulingStrategy === 'webtransport' || (this.rcServerAddress && this.rcServerAddress.startsWith('webtransport://'))) {
       this.sceneCullingWebTransport();
     }
@@ -167,7 +162,7 @@ export class SLM2Loader
   }
 
   /**
-   * B4 本地 RVC：按相机到 tile 的距离选 tile + 定 LOD，不依赖外部服务器
+   * B4 local RVC: distance-based tile + LOD without server-side selection.
    */
   sceneCullingLocal() {
     if (!this.tilesMapping || !this.rootScene) return;
@@ -224,13 +219,13 @@ export class SLM2Loader
 
   sceneCulling() 
   {
-    // 检测 WebTransport 模式
+    // WebTransport scheduling path
     if (this.schedulingStrategy === 'webtransport' || (this.rcServerAddress && this.rcServerAddress.startsWith('webtransport://'))) {
       this.sceneCullingWebTransport();
       return;
     }
 
-    // HTTP1.1 版本的 WebSocket 逻辑
+    // HTTP/1.1 WebSocket path
     if(!this.ws){
       return;
     }
@@ -270,7 +265,7 @@ export class SLM2Loader
         (cameraPosHash != this.lastCameraPosHash ||
         cameraRotHash != this.lastCameraRotHash ||
         screenSizeHash != this.lastScreenSizeHash) || 
-        this.requestId < 2 // 初始阶段强制刷新两次
+        this.requestId < 2 // force two updates at startup
         )
     {
       
@@ -287,15 +282,13 @@ export class SLM2Loader
 
       mvpMatrix.multiply(rootMatrix);
 
-      // 创建一个 Matrix4 对象
       let mvp = [];
 
-      // 遍历 elements 数组，将每个元素精度转换成两位小数
       mvpMatrix.elements.map(value => {
-          mvp.push(value); // 保留两位小数，并将字符串转换回数字
+          mvp.push(value);
       });
 
-      // 放大视口，以便获得更为富裕的可见集合，在摄像机转动时减少构件缺失
+      // Widen viewport slightly to reduce popping when the camera moves
       var CameraFrameUpscale = 1.2;
       var clientWidth = Math.round(this.clientWidth * CameraFrameUpscale);
       var clientHeight = Math.round(this.clientHeight * CameraFrameUpscale);
@@ -332,7 +325,7 @@ export class SLM2Loader
     }
   }
 
-  // WebTransport 模式：发送相机数据（完全按照 HTTP1.1 版本的逻辑）
+  // WebTransport: send camera pose (same payload shape as HTTP/1.1 WebSocket path)
   sceneCullingWebTransport() {
     if (!this.wt || !this.wtStreamWriter || !this.connected) {
       return;
@@ -348,7 +341,7 @@ export class SLM2Loader
       this.lastScreenSizeHash = null;
     }
 
-    // HTTP1.1 版本的精度阈值
+    // Same hash quantization as HTTP/1.1 path
     var posHashResolution = 1;
     var rotHashResolution = 5;
     var cameraPosHash = (this.activeCamera.position.x * posHashResolution).toFixed(0) + "-" + 
@@ -364,7 +357,7 @@ export class SLM2Loader
         (cameraPosHash != this.lastCameraPosHash ||
         cameraRotHash != this.lastCameraRotHash ||
         screenSizeHash != this.lastScreenSizeHash) || 
-        this.requestId < 2 // 初始阶段强制刷新两次
+        this.requestId < 2 // force two updates at startup
         )
     {
       
@@ -372,8 +365,7 @@ export class SLM2Loader
       this.lastCameraRotHash = cameraRotHash;
       this.lastScreenSizeHash = screenSizeHash;
 
-      // HTTP1.1 版本：计算 MVP 矩阵（虽然服务器可能不使用，但保持一致性）
-      // 🔥 确保 rootScene 的矩阵已更新
+      // Compute MVP (kept consistent with HTTP/1.1 client)
       if (this.rootScene) {
         this.rootScene.updateMatrixWorld(true);
       }
@@ -386,9 +378,9 @@ export class SLM2Loader
       const rootMatrix = this.rootScene ? this.rootScene.matrixWorld : new Matrix4();
       mvpMatrix.multiply(rootMatrix);
       
-      // 🔥 调试：输出 rootScene 的变换信息（仅在首次调用时）
+      // Debug: log rootScene transform once
       if (!this._rootSceneDebugged && this.rootScene) {
-        console.log('[SLM2Loader] 🔍 rootScene 变换信息:', {
+        console.log('[SLM2Loader] rootScene transform:', {
           rotation: [
             (this.rootScene.rotation.x * 180 / Math.PI).toFixed(2),
             (this.rootScene.rotation.y * 180 / Math.PI).toFixed(2),
@@ -405,7 +397,7 @@ export class SLM2Loader
           mvp.push(value);
       });
 
-      // HTTP1.1 版本的视口放大
+      // Viewport upscale (same as HTTP/1.1)
       var CameraFrameUpscale = 1.2;
       var clientWidth = Math.round(this.clientWidth * CameraFrameUpscale);
       var clientHeight = Math.round(this.clientHeight * CameraFrameUpscale);
@@ -417,7 +409,7 @@ export class SLM2Loader
 
       var newCameraHash = cameraPosHash + ':' + cameraRotHash;
       
-      // 🔥🔥🔥 [关键修复] 将相机世界坐标转换为 rootScene 的局部坐标 🔥🔥🔥
+      // World camera position -> rootScene local space
       const localCameraPos = new Vector3();
       localCameraPos.copy(this.activeCamera.position);
       const inverseRootMatrix = this.rootScene && this.rootScene.matrixWorld ? this.rootScene.matrixWorld.clone().invert() : null;
@@ -425,7 +417,7 @@ export class SLM2Loader
         localCameraPos.applyMatrix4(inverseRootMatrix);
       }
       
-      // 🔥 VPAP：相机正前方方向向量（与 cameraPos 同一局部坐标系）
+      // VPAP: forward in same local frame as cameraPos
       const localCameraForward = new Vector3();
       if (this.controls && this.controls.target) {
         const localTarget = this.controls.target.clone();
@@ -436,9 +428,9 @@ export class SLM2Loader
         if (inverseRootMatrix) localCameraForward.transformDirection(inverseRootMatrix);
       }
       
-      // 🔥 调试：输出坐标转换信息（仅在首次调用时）
+      // Debug: log coordinate transform once
       if (!this._cameraCoordConverted) {
-        console.log('[SLM2Loader] 🔍 相机坐标转换:', {
+        console.log('[SLM2Loader] camera coord transform:', {
           worldPos: [
             this.activeCamera.position.x.toFixed(2),
             this.activeCamera.position.y.toFixed(2),
@@ -463,11 +455,11 @@ export class SLM2Loader
         this._cameraCoordConverted = true;
       }
       
-      // 🔥 B3/B4 埋点：存储当前相机供 receiveTileStreams 计算 VPAP
+      // Telemetry: camera for VPAP in receiveTileStreams
       this._telemetryCameraPos = [localCameraPos.x, localCameraPos.y, localCameraPos.z];
       this._telemetryCameraForward = [localCameraForward.x, localCameraForward.y, localCameraForward.z];
 
-      // 发送相机数据（B4 VPAP 需要 cameraForward）
+      // B4 VPAP needs cameraForward
       let camera_data = {
           "type": 0,
           "id": this.requestId,
@@ -485,17 +477,17 @@ export class SLM2Loader
       try {
         const encoder = new TextEncoder();
         const dataToSend = JSON.stringify(camera_data) + '\n';
-        console.log(`📤 [SLM2Loader] 发送相机数据 (requestId: ${this.requestId}):`, {
+        console.log(`[SLM2Loader] sending camera pose (requestId: ${this.requestId}):`, {
           cameraPos: camera_data.cameraPos,
           id: camera_data.id,
           cameraPosStr: `[${camera_data.cameraPos[0]?.toFixed(2)}, ${camera_data.cameraPos[1]?.toFixed(2)}, ${camera_data.cameraPos[2]?.toFixed(2)}]`
         });
         this.wtStreamWriter.write(encoder.encode(dataToSend)).catch(e => {
-          console.error('[SLM2Loader] ❌ 发送相机数据失败:', e);
+          console.error('[SLM2Loader] failed to send camera pose:', e);
         });
         this._lastCameraPoseSendTime = performance.now();
       } catch (error) {
-        console.error('[SLM2Loader] ❌ 发送相机数据失败:', error);
+        console.error('[SLM2Loader] failed to send camera pose:', error);
       }
 
       this.requestId++;
@@ -514,13 +506,13 @@ export class SLM2Loader
     this.requestId = 0;
     this.requestMap = {};
 
-    // 检测 WebTransport URL
+    // WebTransport URL
     if (this.schedulingStrategy === 'webtransport' || (this.rcServerAddress && this.rcServerAddress.startsWith('webtransport://'))) {
       this.startConnectWebTransport();
       return;
     }
 
-    // HTTP1.1 版本的 WebSocket 逻辑
+    // HTTP/1.1 WebSocket path
     this.server_ip = this.rcServerAddress;//'ws://127.0.0.1:5600';
 
     this.ws = new WebSocket(this.server_ip)
@@ -539,7 +531,7 @@ export class SLM2Loader
     {
       const arrayBuffer = event.data;
       const dataView = new DataView(arrayBuffer);
-      const decoder = new TextDecoder('utf-8'); // 假设数据是以UTF-8编码的
+      const decoder = new TextDecoder('utf-8');
       const jsonString = decoder.decode(dataView);
       const jsonObject = JSON.parse(jsonString);
       const modelList = JSON.parse(jsonObject.list);
@@ -574,7 +566,7 @@ export class SLM2Loader
     };
   }
 
-  // WebTransport 连接
+  // WebTransport session
   async startConnectWebTransport() {
     var scope = this;
 
@@ -583,11 +575,11 @@ export class SLM2Loader
       return;
     }
 
-    // 将 webtransport:// 转换为 https://
+    // Browser API expects https://
     const wtUrl = this.rcServerAddress.replace('webtransport://', 'https://');
 
     try {
-      console.log('[SLM2Loader] 🔵 WebTransport: 尝试连接', wtUrl);
+      console.log('[SLM2Loader] WebTransport connecting:', wtUrl);
       this.wt = new WebTransport(wtUrl);
       
       await this.wt.ready;
@@ -597,29 +589,27 @@ export class SLM2Loader
         window.__WT_SESSION_READY__ = true;
         window.__WT_SESSION_READY_AT__ = performance.now();
       }
-      console.log('[SLM2Loader] ✅ WebTransport 连接成功');
+      console.log('[SLM2Loader] WebTransport connected');
 
-      // 创建双向流用于发送相机数据
-      console.log('[SLM2Loader] 🔵 创建双向流用于发送相机数据...');
+      console.log('[SLM2Loader] creating bidirectional stream for camera pose...');
       const bidirectionalStream = await this.wt.createBidirectionalStream();
-      console.log('[SLM2Loader] ✅ 双向流创建成功');
+      console.log('[SLM2Loader] bidirectional stream ready');
       this.wtStreamWriter = bidirectionalStream.writable.getWriter();
-      console.log('[SLM2Loader] ✅ 双向流 writer 已获取');
+      console.log('[SLM2Loader] bidirectional stream writer acquired');
 
-      // 开始接收 tile stream
+      // Incoming tile streams
       this.receiveTileStreams();
 
-      // 监听连接关闭
       this.wt.closed.then(() => {
-        console.log('[SLM2Loader] 🔴 WebTransport 连接关闭');
+        console.log('[SLM2Loader] WebTransport closed');
         this.connected = false;
       }).catch(error => {
-        console.error('[SLM2Loader] ❌ WebTransport 连接错误:', error);
+        console.error('[SLM2Loader] WebTransport error:', error);
         this.connected = false;
       });
 
     } catch (error) {
-      console.error('[SLM2Loader] ❌ WebTransport 连接失败:', error);
+      console.error('[SLM2Loader] WebTransport connect failed:', error);
       this.connected = false;
       if (typeof window !== 'undefined') {
         window.__WT_SESSION_READY__ = false;
@@ -627,22 +617,21 @@ export class SLM2Loader
     }
   }
 
-  // 接收 WebTransport tile stream
+  // Consume unidirectional tile streams from server
   async receiveTileStreams() {
     var scope = this;
 
     if (!this.wt) return;
 
-    // 🔥 统计初始 tile 接收情况
+    // Stats: tiles received in first 5s
     if (!this._initialTileStats) {
       this._initialTileStats = {
         startTime: Date.now(),
         lodCounts: { 1: 0, 2: 0, 3: 0, 4: 0 },
         totalCount: 0
       };
-      // 5秒后输出统计信息
       setTimeout(() => {
-        console.log('[SLM2Loader] 📊 初始 tile 接收统计 (前5秒):', {
+        console.log('[SLM2Loader] initial tile stats (first 5s):', {
           total: scope._initialTileStats.totalCount,
           lodCounts: scope._initialTileStats.lodCounts,
           lodDistribution: {
@@ -655,13 +644,13 @@ export class SLM2Loader
       }, 5000);
     }
     
-    // 🔥 完整接收统计（用于对比服务器推送数量）
+    // Cumulative receive stats (vs server push count)
     if (!this._totalReceiveStats) {
       this._totalReceiveStats = {
         startTime: Date.now(),
         lodCounts: { 1: 0, 2: 0, 3: 0, 4: 0 },
         totalCount: 0,
-        receivedTiles: new Set() // 记录已接收的tile hash（去重）
+        receivedTiles: new Set() // dedupe by tile+LOD key
       };
     }
 
@@ -672,10 +661,9 @@ export class SLM2Loader
         const { done, value: stream } = await streamReader.read();
         if (done) break;
 
-        // 🔥 优化：立即异步处理 stream，不阻塞读取循环
-        // 使用 Promise.resolve().then() 确保异步执行，不阻塞主循环
+        // Process each stream asynchronously so the reader loop stays responsive
         Promise.resolve().then(async () => {
-          // 公平性：T_logic_request_start —— 与 B1/B2 在 fetch 前 recordReq 对齐；此处为开始消费该 WT stream 之前（等价于「调用底层接收接口」前）
+          // Fairness: logic_request_start aligned with B1/B2 (before consuming the stream)
           const logicRequestStart = performance.now();
           const reader = stream.getReader();
           const decoder = new TextDecoder();
@@ -699,7 +687,7 @@ export class SLM2Loader
             }
             if (streamDone) {
               const completeAt = performance.now();
-              // 流结束时处理剩余数据
+              // Flush trailing binary on stream end
               if (metadata && binaryChunks.length > 0) {
                 const totalSize = binaryChunks.reduce((sum, c) => sum + c.length, 0);
                 const tileData = new Uint8Array(totalSize);
@@ -709,12 +697,12 @@ export class SLM2Loader
                   offset += c.length;
                 }
                 
-                // 创建正确的 task 对象格式（与 GSTask 一致）
+                // GSTask-compatible task object
                 const task = {
                   hash: metadata.hash,
                   targetLOD: metadata.lod,
                   loadingLOD: metadata.lod,
-                  url: '', // WebTransport 模式下不需要 URL
+                  url: '', // not used for WebTransport
                   weight: metadata.weight || 0
                 };
                 
@@ -725,7 +713,7 @@ export class SLM2Loader
                   if (typeof window.__RECORD_TILE_TTFB_TTLB__ === 'function') {
                     window.__RECORD_TILE_TTFB_TTLB__(Math.max(0, ttfbFair), Math.max(0, ttlbFair), metadata.hash || '');
                   }
-                  // B3/B4：TileTelemetry 使用与 B1/B2 相同的 TTFB 定义 —— first_byte - logic_request_start
+                  // B3/B4 TileTelemetry: TTFB = first_byte - logic_request_start (same as B1/B2)
                   if (window.__EXPERIMENT_MODE__ && window.TileTelemetry) {
                     const tel = window.TileTelemetry.getTileTelemetryLogger();
                     let camPos = scope._telemetryCameraPos;
@@ -750,12 +738,9 @@ export class SLM2Loader
                       cameraForward: camFwd
                     });
                   }
-                  // 🔥 优化：立即处理，不使用批量队列（减少延迟）
-                  // 批量渲染虽然可以减少渲染调用，但引入了延迟，导致感觉更慢
-                  // 改为立即处理，利用 WebTransport 的并发优势
                   await scope._wtAddObject_GS_throttled(task, tileData.buffer);
                   
-                  // 🔥 统计初始 tile（前5秒）
+                  // Initial-window stats
                   const elapsed = Date.now() - scope._initialTileStats.startTime;
                   if (elapsed < 5000) {
                     scope._initialTileStats.totalCount++;
@@ -763,7 +748,7 @@ export class SLM2Loader
                     scope._initialTileStats.lodCounts[lod] = (scope._initialTileStats.lodCounts[lod] || 0) + 1;
                   }
                   
-                  // 🔥 完整接收统计（用于对比服务器推送数量）
+                  // Cumulative stats
                   if (scope._totalReceiveStats) {
                     scope._totalReceiveStats.totalCount++;
                     const lod = metadata.lod || 1;
@@ -771,7 +756,7 @@ export class SLM2Loader
                     scope._totalReceiveStats.receivedTiles.add(`${metadata.hash}-L${lod}`);
                     if (!scope._totalReceiveStats.receivedTileIds) scope._totalReceiveStats.receivedTileIds = new Set();
                     scope._totalReceiveStats.receivedTileIds.add(metadata.hash);
-                    // 公平性：loadedCount = 唯一 tile 数（去重，同一 tile 多 LOD 只算 1）
+                    // Fairness: unique tile ids (one count per tile, not per LOD)
                     if (window.__EXPERIMENT_MODE__) {
                       window.__WEBTRANSPORT_LOADED_COUNT__ = scope._totalReceiveStats.receivedTileIds.size;
                     }
@@ -786,13 +771,13 @@ export class SLM2Loader
             }
 
             if (!metadataRead) {
-              // 合并当前 chunk 到 textBuffer
+              // Append chunk to text buffer until newline
               const newBuffer = new Uint8Array(textBuffer.length + chunk.length);
               newBuffer.set(textBuffer, 0);
               newBuffer.set(chunk, textBuffer.length);
               textBuffer = newBuffer;
 
-              // 查找 \n 的位置（字节 0x0A）
+              // Find newline (0x0A)
               let newlineIndex = -1;
               for (let i = 0; i < textBuffer.length; i++) {
                 if (textBuffer[i] === 0x0A) {
@@ -802,13 +787,13 @@ export class SLM2Loader
               }
 
               if (newlineIndex !== -1) {
-                // 找到 \n，解析元数据
+                // Parse JSON metadata line
                 const metadataBytes = textBuffer.slice(0, newlineIndex);
                 const metadataText = decoder.decode(metadataBytes);
                 metadata = JSON.parse(metadataText);
                 metadataRead = true;
 
-                // 剩余的数据是二进制 tile 数据的开始
+                // Bytes after newline are tile payload
                 if (textBuffer.length > newlineIndex + 1) {
                   const binaryStart = textBuffer.slice(newlineIndex + 1);
                   binaryChunks.push(binaryStart);
@@ -817,31 +802,31 @@ export class SLM2Loader
                 textBuffer = new Uint8Array(0);
               }
             } else {
-              // 读取二进制 tile 数据
+              // Binary tile chunks
               binaryChunks.push(chunk);
               markDecodable();
             }
           }
         }).catch(error => {
-          console.error('[SLM2Loader] ❌ 处理 tile stream 错误:', error);
+          console.error('[SLM2Loader] tile stream handler error:', error);
         });
       }
       
-      // 🔥 确保所有待处理的 tile 都被处理
+      // Drain any legacy batch queue if present
       if (this.tileBatchQueue.length > 0) {
         this.processTileBatch();
       }
     } catch (error) {
-      console.error('[SLM2Loader] ❌ 接收 tile stream 错误:', error);
+      console.error('[SLM2Loader] receiveTileStreams error:', error);
     }
     
-    // 🔥 定期输出完整接收统计（每10秒）
+    // Periodic cumulative stats (every 10s)
     if (this._totalReceiveStats) {
       setInterval(() => {
         const stats = this._totalReceiveStats;
         const elapsed = (Date.now() - stats.startTime) / 1000;
         const tilesPerSecond = (stats.totalCount / elapsed).toFixed(1);
-        console.log(`[SLM2Loader] 📊 完整接收统计 (运行${elapsed.toFixed(1)}秒):`, {
+        console.log(`[SLM2Loader] receive stats (${elapsed.toFixed(1)}s uptime):`, {
           total: stats.totalCount,
           uniqueTiles: stats.receivedTiles.size,
           lodCounts: stats.lodCounts,
@@ -853,7 +838,7 @@ export class SLM2Loader
             L4: ((stats.lodCounts[4] / stats.totalCount) * 100).toFixed(1) + '%'
           }
         });
-      }, 10000); // 每10秒输出一次
+      }, 10000);
     }
   }
 
@@ -869,7 +854,7 @@ export class SLM2Loader
       {
         this.cullingUpdateDelta = 1000;
       }
-      // 🔥 优化：降低剔除更新间隔，从80ms降到40ms，提升响应速度
+      // Culling tick: 40ms (was 80ms) for snappier updates
       if (this.cullingUpdateDelta > 40)
       {
         if (this.useLocalRVC) {
@@ -905,7 +890,7 @@ export class SLM2Loader
   getRVCServerUrl(sceneName, callback)
   {
     var scope = this;
-    // 检查 lbServer 是否存在且不为空字符串
+    // Use load balancer only when lbServer is non-empty
     if (this.lbServer != undefined && this.lbServer != null && this.lbServer.trim() !== '')
     {
       var requestOptions = {
@@ -957,7 +942,7 @@ export class SLM2Loader
     }
     else
     {
-      // lbServer 为空，直接使用配置中的 rcServerAddress
+      // No LB: use rcServerAddress from config
       if (callback)
       {
         callback();
@@ -973,7 +958,7 @@ export class SLM2Loader
     this.schedulingStrategy = baseConfig.loader.schedulingStrategy;
     this.lbServer = baseConfig.lbServer;
     this.gsResource = baseConfig.loader.gsResource;
-    // 🔥 B4 本地 RVC：true 时按远近选 tile + 定 LOD，不依赖 WebTransport 服务器
+    // B4 local RVC: client-side tile+LOD when true
     this.useLocalRVC = baseConfig.loader.useLocalRVC === true;
 
     this.modelCacheMgr.setSchedulingStrategy(this.schedulingStrategy);
@@ -992,7 +977,7 @@ export class SLM2Loader
     this.setSize(initalSize.x, initalSize.y);
 
     var scope = this;
-    // 这里增加两个文件的异步加载，两个都加载完后再执行 startConnect
+    // Load scene config and tile mapping, then connect
     var sceneConfigPromise = new Promise((resolve, reject) => {
       var fileLoader = new FileLoader();
       fileLoader.load(this.resourcesBaseUrl + "/sceneWeb.json", function(data) {
@@ -1005,7 +990,7 @@ export class SLM2Loader
         resolve();
 
       }, undefined, function(error) {
-        console.error("加载 sceneWeb.json 失败:", error);
+        console.error('Failed to load sceneWeb.json:', error);
         reject(error);
       });
     });
@@ -1016,14 +1001,14 @@ export class SLM2Loader
         scope.tilesMapping = JSON.parse(data);
         resolve();
       }, undefined, (error) => {
-        console.error('加载 custom_bounding_boxes_mapping-campus2.json 失败:', error);
+        console.error('Failed to load custom_bounding_boxes_mapping-campus2.json:', error);
         reject(error);
       });
     });
 
     Promise.all([sceneConfigPromise, tilesMappingPromise]).then(() => {
       if (scope.useLocalRVC) {
-        console.log('[SLM2Loader] B4 本地 RVC 模式：按远近选 tile + 定 LOD');
+        console.log('[SLM2Loader] B4 local RVC: distance-based tile + LOD');
         scope.sceneCullingLocal();
       } else {
         scope.getRVCServerUrl(baseConfig.name, function() {
@@ -1031,16 +1016,15 @@ export class SLM2Loader
         });
       }
     }).catch((error) => {
-      console.error('初始化场景配置或tilesMapping失败，无法连接服务器:', error);
+      console.error('Scene init or tilesMapping failed; cannot connect:', error);
     });
 
     this.rootScene = new Object3D();
-    // 🔥 彻底移除旋转 (保持为 0)
+    // No root rotation
     this.rootScene.rotation.x = 0;
-    // 🔥🔥🔥 修正左右镜像：图1(正确学校) vs 图2(B4) 左右颠倒
-    // 翻转 X 轴使 B1/B2/B3/B4 与正确学校方向一致
+    // Flip X so B1–B4 match reference campus orientation
     this.rootScene.scale.set(-100, -100, 100);
-    // 🔥 确保矩阵更新（这步很重要，对坐标转换至关重要）
+    // World matrix must be current before camera/local transforms
     this.rootScene.updateMatrixWorld(true);
 
     this.initLoad();
@@ -1050,8 +1034,7 @@ export class SLM2Loader
 
 
   async processLoadedTask_GS(task, buffer){
-    // 让 HTTP/本地 RVC/WT 的 addObject_GS 统一走同一个并发阀，
-    // 以避免大量 tile 完成后短时间并发触发 CacheMgr/GaussianSplattingMesh 合成。
+    // Single throttle for HTTP, local RVC, and WebTransport addObject_GS paths
     await this._wtAddObject_GS_throttled(task, buffer);
     return buffer;
   }
@@ -1065,7 +1048,7 @@ export class SLM2Loader
       return;
     }
 
-    // 按队列顺序加载，保证高LOD优先（生成列表时已按 L4->L1 排序）
+    // Queue order preserves high-LOD-first (list built L4->L1)
     while (scope.GSLoaderCount > 0 && this.loadingTaskList_GS.length > 0)
     {
       let nextTask = this.loadingTaskList_GS.shift();
@@ -1097,22 +1080,22 @@ export class SLM2Loader
 
   initLoad()
   {
-    // 🔥 B4 本地 RVC：由 sceneCullingLocal 驱动，不预加载
+    // B4: sceneCullingLocal drives loads; no JSON preload
     if (this.useLocalRVC) {
       this.modelToLoadList_GS = { tileList: [], weightList: [] };
       return;
     }
-    // WebTransport 模式（B3）：初始 tile 由服务器推送，不需要客户端加载 modelToLoadList_GS.json
+    // B3 WebTransport: server pushes tiles; skip modelToLoadList_GS.json
     if (this.schedulingStrategy === 'webtransport' || (this.rcServerAddress && this.rcServerAddress.startsWith('webtransport://'))) {
-      console.log('[SLM2Loader] WebTransport 模式：跳过 initLoad，等待服务器推送初始 tile');
+      console.log('[SLM2Loader] WebTransport: skipping initLoad, waiting for server tiles');
       this.modelToLoadList_GS = { tileList: [], weightList: [] };
       return;
     }
 
-    // HTTP1.1 模式：从assets中读取modelToLoadList_GS.json并解析到this.modelToLoadList_GS
+    // HTTP/1.1: load modelToLoadList_GS.json from assets
     const scope = this;
     const fileLoader = new FileLoader();
-    // 🔥 修复路径：使用 resourcesBaseUrl 构建完整路径
+    // Full URL from resourcesBaseUrl when set
     const modelListUrl = this.resourcesBaseUrl ? 
       (this.resourcesBaseUrl.endsWith('/') ? this.resourcesBaseUrl : this.resourcesBaseUrl + '/') + 'modelToLoadList_GS.json' :
       'assets/modelToLoadList_GS.json';
@@ -1157,15 +1140,15 @@ export class SLM2Loader
 
   generateLoadingTasks_GS(tileList, weightList)
   {
-    // 🔥 WebTransport 模式（B3）或本地 RVC 使用 HTTP 时：WebTransport 由服务器推送，本地 RVC 用 HTTP 拉取
+    // B3 WT: visibility only; local RVC over HTTP still fetches splats
     if (!this.useLocalRVC && (this.schedulingStrategy === 'webtransport' || (this.rcServerAddress && this.rcServerAddress.startsWith('webtransport://')))) {
-      // 只更新可见性，不生成 HTTP 任务
+      // Refresh visibility only (no HTTP fetch tasks)
       this.modelCacheMgr.refreshVisible_GS(tileList, weightList);
-      this.loadingTaskList_GS = []; // 清空任务列表
+      this.loadingTaskList_GS = [];
       return;
     }
 
-    // HTTP1.1 模式：生成 HTTP fetch 任务
+    // HTTP/1.1: build fetch tasks
     let loadingTaskList = [[],[],[],[]];
     for (var tIdx = tileList.length - 1; tIdx >= 0; tIdx--)
     {
@@ -1186,7 +1169,7 @@ export class SLM2Loader
   }
 
   getLodFromWeight(weight) {
-    // 与 HTTP1.1 保持一致的权重阈值，避免 L1-L4 对应关系颠倒
+    // Weight thresholds match HTTP/1.1 server mapping L1–L4
     if (weight > 16000) {
       return 4;
     } else if (weight > 8000) {

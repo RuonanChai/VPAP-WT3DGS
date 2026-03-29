@@ -73,7 +73,7 @@ See `network_emulation/README.md` and `network_emulation/tc_shape_example.sh` fo
 | **`client/`** | WebTransport receive path + `TileTelemetry` + `SpatioTemporalQoETracker` |
 | **`network_emulation/`** | `tc` example + README |
 | **`dataset/`** | Toy layout, examples, **no large binaries** in git by default (see `.gitignore`) |
-| **`analysis_and_plotting/`** | Matplotlib scripts for QoE / CPU / memory style figures (inputs: aggregated CSVs from your evaluation pipeline) |
+| **`analysis_and_plotting/`** | `fig1_qoe/`, **`fig2_throughput/`** (`Fig2A_Throughput.py`, `Fig2B_Efficiency.py`), `fig3_cpu_memory/` — Matplotlib scripts (inputs: aggregated CSVs from your evaluation pipeline) |
 
 ---
 

@@ -47,7 +47,7 @@ const REFERENCE_MANIFEST_PATH = process.env.VPAP_REFERENCE_MANIFEST
 const fixedTileTargetLodMap = new Map(); // tileHash -> targetLod
 let fixedSelectionTiles = [];
 
-// 与 B4 对齐的「公平」传输实现：仅影响 QUIC 上同时存在的流数量，不改变 tile/LOD 语义顺序
+// Fair transport aligned with B4: only affects how many QUIC streams are in flight; tile/LOD semantics unchanged
 const B3_CONCURRENT_INITIAL = 120;
 const B3_CONCURRENT_CAMERA = 100;
 const B3_BATCH_DELAY_INITIAL_MS = 2;
@@ -112,17 +112,17 @@ const server = new Http3Server({
 
 console.log('✅ WebTransport server object created');
 
-// 🔥 初始化服务端性能指标记录（baseline3），包含元数据
+// Server-side stream metrics (baseline3) with run metadata
 const streamMetrics = new StreamMetrics('baseline3', {
   run_id: `run_${Date.now()}`,
   scenario_id: 'gs-campus',
-  cache_state: 'cold', // 首次加载为 cold，后续为 warm
+  cache_state: 'cold', // cold on first load, warm on later runs
   camera_trace_id: 'default'
 });
 
-// 文件缓存（LRU）：不改变任何调度语义，只减少重复磁盘 I/O
+// LRU file cache: does not change scheduling; reduces repeated disk reads
 const tileDataCache = new Map();   // key: `${tileHash}-L${lod}` -> Buffer
-const MAX_CACHE_ITEMS = 800;       // 可先调 500/800/1000，看内存
+const MAX_CACHE_ITEMS = 800;       // tune 500/800/1000 by available RAM
 
 function touchCache(key, value) {
   if (tileDataCache.has(key)) {
@@ -177,7 +177,7 @@ try {
   process.exit(1);
 }
 
-// 🔥 定期导出指标（每60秒），文件名包含元数据
+// Periodic metrics export every 60s (filenames include metadata)
 setInterval(async () => {
   try {
     const filename = streamMetrics.generateFilename('latest');
@@ -187,7 +187,7 @@ setInterval(async () => {
   }
 }, 60000);
 
-// 🔥 服务器关闭时导出最终指标，文件名包含元数据
+// On shutdown, export final metrics (filenames include metadata)
 process.on('SIGINT', async () => {
   console.log('\n📊 Exporting final stream metrics...');
   try {
@@ -230,8 +230,8 @@ process.on('SIGINT', async () => {
         console.error('❌ Session close error:', error);
       });
 
-      // 防重传：以 (tileHash, targetLod) 为粒度
-      // 公平性：只影响“重复发包”，不影响“应用层发起顺序”
+      // Dedup at (tileHash, targetLod) granularity
+      // Fairness: suppresses duplicate sends only; does not change application enqueue order
       session.sentTiles = new Set();
       
       // Baseline3: Initial load - use SAME tile selection as other baselines
@@ -302,7 +302,7 @@ process.on('SIGINT', async () => {
   }
 })();
 
-/** 展平为严格顺序的 (hash, lod) 队列：先 tile 序，每 tile 内 L1..targetLod */
+/** Flatten to strict (hash, lod) queue: tile order first, then L1..targetLod per tile */
 function buildBaseline3WorkQueue(tileList) {
   const work = [];
   for (const tile of tileList) {
@@ -315,7 +315,7 @@ function buildBaseline3WorkQueue(tileList) {
 }
 
 /**
- * 公平并发：按队列分批 Promise.allSettled，批大小与批间延迟与 B4 一致；不改变队列语义。
+ * Fair concurrency: batched Promise.allSettled with same batch size/delay as B4; queue semantics unchanged.
  */
 async function pushBaseline3WorkQueue(session, tileList, isInitialLoad) {
   const workQueue = buildBaseline3WorkQueue(tileList);
@@ -364,7 +364,7 @@ async function pushBaseline3WorkQueue(session, tileList, isInitialLoad) {
   console.log(`✅ B3 push done: ${totalOk}/${workQueue.length} ok | ${totalElapsed}ms`);
 }
 
-// Baseline3 单个 tile-lod 的底层写入；sendOrder 恒定，无应用层调序
+// Baseline3: one unidirectional stream per tile-LOD; constant sendOrder (no app-level reordering)
 async function pushTileActual(session, tileHash, lod) {
   const maxAllowedLod = fixedTileTargetLodMap.get(tileHash);
   if (fixedTileTargetLodMap.size > 0 && (maxAllowedLod == null || lod < 1 || lod > maxAllowedLod)) {

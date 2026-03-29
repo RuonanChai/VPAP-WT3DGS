@@ -1,21 +1,20 @@
 /**
- * 全局细粒度瓦片埋点 (Global Fine-grained Tile Telemetry)
- * 用于 B1/B2/B3/B4 统一记录 Per-tile 生命周期，生成顶会实验图表
+ * Global fine-grained per-tile telemetry for B1–B4 (paper figures).
  *
- * 公平性（TTFB / TTLB）：
- * - B1/B2：在发起 HTTP 传输前调用 recordReq → req_time = T_logic_request_start
- * - B3/B4：在开始消费该 WT stream 前（stream.getReader() 前一刻）记 logicRequestStart，
- *   与 B1/B2「调用底层传输前」对齐；禁止仅用 stream 内构造的 ttfbMs 冒充 req_time。
- * 时间语义：全部为相对 t0 的 ms；ttfb_ms = first_byte_time - req_time（与上式一致）
- * 字段：experiment_id, run_id, baseline_id, tile_id, lod, bytes,
- *       vpap_score, is_critical,
- *       enqueue_time, req_time, first_byte_time, complete_time,
- *       ttfb_ms, ttlb_ms (导出时附加)
- * 去重：每 (run_id, baseline_id, tile_id, lod) 仅一条，首次到达记，重复加 duplicate_count
+ * Fair TTFB / TTLB:
+ * - B1/B2: call recordReq before HTTP transfer starts → req_time = T_logic_request_start.
+ * - B3/B4: set logicRequestStart immediately before consuming the WT stream (before getReader()),
+ *   aligned with “before the wire API” on HTTP; do not substitute stream-internal ttfbMs for req_time.
+ * Times are ms relative to t0; ttfb_ms = first_byte_time - req_time.
+ * Fields: experiment_id, run_id, baseline_id, tile_id, lod, bytes,
+ *         vpap_score, is_critical,
+ *         enqueue_time, req_time, first_byte_time, complete_time,
+ *         ttfb_ms, ttlb_ms (added on export).
+ * Dedup: one row per (run_id, baseline_id, tile_id, lod); duplicates increment duplicate_count.
  */
 
 const TILE_SIZE = 0.7788;
-/** 与 metric_fairness_postprocess.MIN_DECODABLE_PAYLOAD_BYTES 一致：排除纯元数据包 */
+/** Matches metric_fairness_postprocess.MIN_DECODABLE_PAYLOAD_BYTES (metadata-only packets excluded). */
 const MIN_DECODABLE_PAYLOAD_BYTES = 256;
 const ORIGIN_GRID_X = 524267;
 const ORIGIN_GRID_Z = 524285;
@@ -51,7 +50,7 @@ function computeVPAPScore(cameraPos, cameraForward, tilePos) {
   return 0.7 * scoreView + 0.3 * scoreDist;
 }
 
-/** is_critical = 点积 > 0.5（在视野 60° 内） */
+/** is_critical: view-direction dot product > 0.5 (~within 60° cone). */
 function computeIsCritical(cameraPos, cameraForward, tilePos) {
   if (!cameraPos || !cameraForward || !tilePos) return false;
   const cx = cameraPos[0] ?? 0, cy = cameraPos[1] ?? 0, cz = cameraPos[2] ?? 0;
@@ -74,7 +73,7 @@ function normalizeBaselineId(b) {
   return s || 'unknown';
 }
 
-/** tile_id 跨 baseline 稳定：统一为 tile_XX_YYYY_ZZZZ 格式 */
+/** Stable tile_id across baselines: tile_XX_YYYY_ZZZZ. */
 function normalizeTileId(id) {
   const s = String(id || '').trim();
   if (/^tile_\d+_\d+_\d+$/.test(s)) return s;
@@ -82,7 +81,7 @@ function normalizeTileId(id) {
   return m ? `tile_${m[1]}_${m[2]}_${m[3]}` : s;
 }
 
-/** LOD 统一：1-4 整数，L1=最粗 L4=最细 */
+/** LOD clamped to integer 1–4 (L1 coarsest, L4 finest). */
 function normalizeLod(lod) {
   const n = parseInt(lod, 10);
   if (isNaN(n) || n < 1) return 1;
@@ -96,13 +95,13 @@ class TileTelemetryLogger {
     this.experimentId = options.experimentId || (typeof window !== 'undefined' && window.__EXPERIMENT_ID__) || 'unknown';
     this.runId = options.runId || (typeof window !== 'undefined' && window.__RUN_ID__) || (this.experimentId + '_' + this.baselineId);
     this.t0 = null;
-    this.records = new Map(); // key: `${tile_id}-L${lod}` -> record，每 key 仅一条
+    this.records = new Map(); // `${tile_id}-L${lod}` -> one record per key
     this.enabled = options.enabled !== false;
   }
 
   _ensureT0() {
     if (this.t0 == null) {
-      // 🔥 零点对齐：优先使用实验 Phase 0 完成时设置的全局 t0，确保 B1/B2/B3/B4 物理时刻一致
+      // Prefer global __TELEMETRY_T0__ from experiment Phase 0 so all baselines share one clock
       this.t0 = (typeof window !== 'undefined' && typeof window.__TELEMETRY_T0__ === 'number')
         ? window.__TELEMETRY_T0__
         : performance.now();
@@ -147,7 +146,7 @@ class TileTelemetryLogger {
     return r;
   }
 
-  /** 瓦片入队（请求生成时刻），去重：仅首次设置 */
+  /** Tile enqueued (task created); first write wins. */
   recordEnqueue(tileId, lod, options = {}) {
     if (!this.enabled) return;
     const { vpapScore, isCritical, cameraPos, cameraForward } = options;
@@ -161,14 +160,14 @@ class TileTelemetryLogger {
       }
     }
     const r = this._getOrCreate(tileId, lod, vpap, critical);
-    if (r.enqueue_time != null) return; // 去重
+    if (r.enqueue_time != null) return;
     const now = performance.now();
     this._ensureT0();
     r.enqueue_time = this._rel(now);
   }
 
   /**
-   * 统一 API：逻辑请求起点（HTTP：fetch 前；WT：getReader 前，且应在 session.ready 之后）
+   * Logical request start: HTTP = before fetch; WT = before getReader (after session.ready).
    * @alias recordReq
    */
   recordLogicalRequestStart(tileId, lod, options = {}) {
@@ -181,12 +180,12 @@ class TileTelemetryLogger {
     r.request_start_source = options.source || 'http_fetch_before';
   }
 
-  /** 底层协议发出请求，去重：仅首次设置 */
+  /** Wire request start; first write wins. */
   recordReq(tileId, lod) {
     this.recordLogicalRequestStart(tileId, lod, { source: 'http_fetch_before' });
   }
 
-  /** 首次累计负载达到可解码阈值（与 Python MIN_DECODABLE 对齐） */
+  /** First time cumulative payload reaches decodable threshold (Python MIN_DECODABLE). */
   recordFirstDecodablePayload(tileId, lod, loadedBytes) {
     if (!this.enabled) return;
     if (loadedBytes == null || loadedBytes < MIN_DECODABLE_PAYLOAD_BYTES) return;
@@ -197,7 +196,7 @@ class TileTelemetryLogger {
     r.first_decodable_byte_time = this._rel(now);
   }
 
-  /** 首次收到第一字节（绝对时间戳），去重：仅首次 onProgress>0 */
+  /** First byte (absolute perf time); first onProgress>0 wins. */
   recordFirstByte(tileId, lod) {
     if (!this.enabled) return;
     const r = this._getOrCreate(tileId, lod);
@@ -207,7 +206,7 @@ class TileTelemetryLogger {
     r.first_byte_time = this._rel(now);
   }
 
-  /** 首次完整接收（绝对时间戳），去重：仅首次 */
+  /** Download complete (absolute perf time); first completion wins. */
   recordComplete(tileId, lod, bytes) {
     if (!this.enabled) return;
     const r = this._getOrCreate(tileId, lod);
@@ -219,17 +218,17 @@ class TileTelemetryLogger {
     this._emit(r);
   }
 
-  /** 兼容旧 API */
+  /** Legacy aliases */
   recordFb(tileId, lod) { this.recordFirstByte(tileId, lod); }
   recordComp(tileId, lod, bytes) { this.recordComplete(tileId, lod, bytes); }
 
   /**
-   * B3/B4 WebTransport：req_time 必须由 SLM2Loader 传入「逻辑请求起点」——与 B1/B2 在 fetch 前 recordReq 对齐。
+   * B3/B4 WebTransport: SLM2Loader must pass logical request start (parity with B1/B2 recordReq before fetch).
    * @param {object} options
-   * @param {number} options.logicRequestStart - performance.now()，在 stream.getReader() / 开始 read 之前记录（与 fetch 前 recordReq 等价）
-   * @param {number} options.firstByteAt - performance.now()，首字节到达（任意 chunk 含字节即可）
-   * @param {number} options.completeAt - performance.now()，该 tile 二进制接收完成
-   * @deprecated options.t0, options.ttfbMs, options.ttlbMs - 旧版；缺省公平字段时降级并告警
+   * @param {number} options.logicRequestStart - performance.now() before getReader() / first read
+   * @param {number} options.firstByteAt - performance.now() when first byte arrives
+   * @param {number} options.completeAt - performance.now() when tile bytes are complete
+   * @deprecated options.t0, options.ttfbMs, options.ttlbMs - legacy; warns if fair fields missing
    */
   recordFromStream(tileId, lod, options = {}) {
     if (!this.enabled) return;
@@ -276,7 +275,7 @@ class TileTelemetryLogger {
 
     if (typeof window !== 'undefined' && window.__EXPERIMENT_MODE__) {
       console.warn(
-        '[TileTelemetry] recordFromStream: 缺少 logicRequestStart/firstByteAt/completeAt，已回退到旧 t0/ttfbMs/ttlbMs（与 B1/B2 不可比）'
+        '[TileTelemetry] recordFromStream: missing logicRequestStart/firstByteAt/completeAt; falling back to legacy t0/ttfbMs/ttlbMs (not comparable to B1/B2)'
       );
     }
     const streamStart = t0 != null ? t0 : performance.now();

@@ -466,7 +466,7 @@
       const sig = this._getReferenceContentSignature(elapsedMs, true);
       const centerCount = sig.center_count || 30;
       // Center survival complete: all center tiles have L1 -> don't count freeze for "waiting for edge"
-      // B4 的 VPAP 会先发中心、后发边缘；中心完成后等待边缘不应算 Freeze
+      // B4 VPAP sends center tiles first, then periphery; waiting for edge after center is not a freeze
       if (sig.loaded_l1 >= centerCount) {
         st.lastContentUpdateMs = elapsedMs;
         st.lastContentSig = sig;

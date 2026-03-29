@@ -12,7 +12,7 @@ def plot_smoothed_median_rss_line() -> None:
     sns.set_theme(style="ticks")
     plt.rcParams.update(
         {
-            # 统一字号调大：按 Fig1C.py 的 rcParams（36-47）
+            # Larger fonts (aligned with fig1c_cdf rcParams)
             "font.size": 24,
             "axes.labelsize": 25,
             "axes.titlesize": 25,
@@ -40,7 +40,7 @@ def plot_smoothed_median_rss_line() -> None:
     df["baseline_name"] = df["baseline"].map(labels_map)
     df = df[df["baseline_name"].notna()].copy()
 
-    # 为每个 baseline / time_s 取跨 run 的中位数，然后做滚动平滑（骨干曲线）
+    # Per (baseline, time_s): median across runs, then rolling smooth (main curve)
     stat = (
         df.groupby(["baseline_name", "time_s"], as_index=False)["memory_mb"]
         .median()
@@ -48,7 +48,7 @@ def plot_smoothed_median_rss_line() -> None:
     )
     stat = stat.sort_values(["baseline_name", "time_s"])
 
-    # 计算采样间隔（通常 0.5s；取中位数用于鲁棒）
+    # Sample interval (often 0.5s); use median for robustness
     unique_ts = sorted(stat["time_s"].unique().tolist())
     if len(unique_ts) >= 2:
         import numpy as np
@@ -58,10 +58,10 @@ def plot_smoothed_median_rss_line() -> None:
     else:
         dt = 0.5
 
-    # “极度平滑”：用较大窗口的滚动均值；不做任何阴影/CI
-    smooth_seconds = 3.0  # 平滑尺度（越大越平滑）
+    # Heavy smoothing: wide rolling mean; no CI band
+    smooth_seconds = 3.0  # larger = smoother
     window_points = max(3, int(round(smooth_seconds / dt)))
-    # rolling 需要奇数窗口更居中一些
+    # Prefer odd window for centered rolling mean
     if window_points % 2 == 0:
         window_points += 1
 
@@ -100,7 +100,7 @@ def plot_smoothed_median_rss_line() -> None:
     ax.legend(title="", loc="lower right", frameon=True, ncol=2)
 
     fig.tight_layout()
-    # 同时输出新旧文件名，避免你后续替换 includegraphics 时出错
+    # New filename plus legacy alias for LaTeX includegraphics
     out_new = here / "Fig3B_Memory.pdf"
     out_old_compat = here / "Fig_Milestone_Memory_Bar.pdf"
     fig.savefig(out_new, format="pdf", bbox_inches="tight")

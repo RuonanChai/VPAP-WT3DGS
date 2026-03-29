@@ -11,7 +11,7 @@ def plot_session_averaged_cpu_box() -> None:
     sns.set_theme(style="ticks")
     plt.rcParams.update(
         {
-            # 统一字号调大：按 Fig1C.py 的 rcParams（36-47）
+            # Larger fonts (aligned with fig1c_cdf rcParams)
             "font.size": 24,
             "axes.labelsize": 19,
             "axes.titlesize": 25,
@@ -71,7 +71,7 @@ def plot_session_averaged_cpu_box() -> None:
 
     fig.tight_layout()
 
-    # 兼容旧命名 + 按新命名输出（避免你后续 includegraphics 还没更新）
+    # Write new filename and legacy alias for LaTeX includegraphics
     out_new = here / "Fig3A_CPU.pdf"
     out_old_compat = here / "Fig_Peak_Memory_Box.pdf"
     fig.savefig(out_new, format="pdf", bbox_inches="tight")

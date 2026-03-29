@@ -1,4 +1,4 @@
-"""仅生成 Fig1B（Completion Rate 柱状图）。Fig1C 请运行同目录 Fig 1C.py → Fig1C_TSL_CDF.pdf。"""
+"""Fig1B only (completion rate bar chart). For Fig1C run fig1c_cdf.py in this folder."""
 from pathlib import Path
 
 import numpy as np
@@ -21,10 +21,10 @@ def _savefig_pdf(fig, path: Path) -> Path:
 
 
 def setup_style():
-    """Fig1B 专用样式（本脚本不再生成 Fig1C）。"""
+    """Styling for Fig1B only (this script does not emit Fig1C)."""
     sns.set_theme(style="ticks")
     plt.rcParams.update({
-        # 统一字号调大：按“大3号”要求整体放大（+3pt）
+        # Bump font sizes (+3pt vs default)
         'font.size': 24,
         'axes.labelsize': 25,
         'axes.titlesize': 25,
@@ -43,13 +43,13 @@ def plot_distributions():
     output_dir = here.parent
     df = pd.read_csv(output_dir / 'experiment_summary.csv')
     
-    # 映射 baseline 名称
+    # Map baseline ids to display names
     labels = {"baseline1": "HTTP/1.1", "baseline2": "HTTP/3", "baseline3": "WT", "baseline4": "WT+VPAP"}
     df['baseline_name'] = df['baseline'].map(labels)
     order = ["HTTP/1.1", "HTTP/3", "WT", "WT+VPAP"]
     palette = setup_style()
 
-    # 将 completion rate 转换为百分比
+    # Completion rate as percent
     df['completion_rate_pct'] = df['completion_rate'] * 100
 
     # ---------------------------------------------------------

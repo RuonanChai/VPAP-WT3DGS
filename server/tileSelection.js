@@ -84,7 +84,7 @@ function getLodFromWeight(weight) {
   return lod;
 }
 
-// 🔥 固定 selection：从 initial_selection.json 读取，不按相机动态选 tile
+// Fixed selection from initial_selection.json (no per-frame camera-driven tile set)
 export function getFixedSelectionFromList(initialList) {
   if (!initialList || !initialList.tileList || !initialList.weightList) return [];
   const tileList = initialList.tileList;

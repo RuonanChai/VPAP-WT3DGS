@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Fig1C：Absolute Tile Arrival Time（相对会话 T0 的首字节绝对到达时刻）CDF。
-语义：与「逐请求 TTFB/TSL」不同，此处为同一时钟下的到达时间分布，可跨 baseline 对比「何时收到数据块」。
-平滑：在对数轴上密集网格上用 ECDF 插值绘制连续曲线（非阶梯）。
+Fig1C: CDF of absolute tile arrival time (first-byte time relative to session T0).
+
+Unlike per-request TTFB/TSL, this uses one wall clock to compare when chunks arrive across baselines.
+Smoothing: interpolate ECDF on a dense log-spaced grid (not a step function).
 """
 from __future__ import annotations
 
@@ -30,11 +31,11 @@ def _savefig_pdf(fig: plt.Figure, path: Path) -> Path:
 
 
 def setup_style():
-    """Fig1C 独立脚本（本文件）专用 rcParams 与四色板；与 generate_fig1_BC.py（仅 Fig1B）分离。"""
+    """Fig1C-only rcParams and palette (separate from generate_fig1_BC.py)."""
     sns.set_theme(style="ticks")
     plt.rcParams.update(
         {
-            # 统一字号调大：按“大3号”要求整体放大（+3pt）
+            # Bump font sizes (+3pt vs default)
             "font.size": 24,
             "axes.labelsize": 25,
             "axes.titlesize": 25,
@@ -50,7 +51,7 @@ def setup_style():
 
 
 def _smooth_ecdf_loggrid(x_ms: np.ndarray, n_grid: int = 2048) -> tuple[np.ndarray, np.ndarray]:
-    """在 log10(x) 上均匀取点，用 ECDF 得到平滑上升的 CDF 曲线。"""
+    """Sample log10(x) uniformly; return smooth ECDF curve."""
     x = np.sort(x_ms[np.isfinite(x_ms) & (x_ms > 0)])
     if x.size == 0:
         return np.array([]), np.array([])
@@ -81,15 +82,15 @@ def plot_absolute_arrival_cdf() -> None:
     tile_df = pd.read_csv(tile_path)
     tile_df["time_s"] = pd.to_numeric(tile_df["time_s"], errors="coerce")
     tile_df["ttfb_ms"] = pd.to_numeric(tile_df["ttfb_ms"], errors="coerce")
-    # 相对会话 T0 的首字节绝对到达时刻 (ms)：与 parse_tile_metrics 中 (req−T0)+(fb−req) 一致
+    # Absolute first-byte arrival (ms) = same as parse_tile_metrics: (req−T0)+(fb−req)
     tile_df["absolute_arrival_ms"] = tile_df["time_s"] * 1000.0 + tile_df["ttfb_ms"]
     tile_df = tile_df.dropna(subset=["absolute_arrival_ms"])
     tile_df = tile_df[tile_df["absolute_arrival_ms"] > 0]
 
     fig, ax = plt.subplots(figsize=(7, 5))
-    # x 用数据坐标（log），y 用 axes 比例，避免多条 median 标签在 CDF 纵轴上挤在一起
+    # x in data (log), y in axes fraction so median labels do not stack on the CDF axis
     trans_x_axes_y = blended_transform_factory(ax.transData, ax.transAxes)
-    # 四个 baseline 标签的纵向错开（从上到下）
+    # Stagger median label heights per baseline
     median_y_axes = {
         "baseline1": 0.93,
         "baseline2": 0.84,
@@ -116,7 +117,7 @@ def plot_absolute_arrival_cdf() -> None:
         m = float(med.get(b, np.nan))
         if not np.isnan(m):
             ax.axvline(m, color=palette[i], linestyle="--", linewidth=2.2, alpha=0.95)
-            # 高 median（右侧）标签放竖线左侧，低 median 放右侧，减少横向重叠
+            # High medians: label left of vline; low medians: right, to reduce overlap
             if _med_of_meds > 0 and m > _med_of_meds * 1.4:
                 x_pos = m * 0.90
                 ha = "right"
