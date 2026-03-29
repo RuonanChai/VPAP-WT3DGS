@@ -1,0 +1,7 @@
+{
+  "description": "Example schema: array of frames with t_ms (relative), cameraPos [x,y,z], cameraForward [x,y,z].",
+  "frames": [
+    { "t_ms": 0, "cameraPos": [0, 0, 0], "cameraForward": [0, 0, -1] },
+    { "t_ms": 1000, "cameraPos": [10, 0, -5], "cameraForward": [0.2, 0, -0.98] }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "description": "Replace with real tile_ids from your toy scene; lock target_lod per tile for fair baselines.",
+  "items": [
+    {
+      "tile_id": "tile_20_524280_524280",
+      "target_lod": 4,
+      "lod": 4,
+      "weight": 20000,
+      "distance": 100.0
+    },
+    {
+      "tile_id": "tile_20_524281_524281",
+      "target_lod": 3,
+      "lod": 3,
+      "weight": 17000,
+      "distance": 800.0
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+node_modules/
+*.pem
+*-key.pem
+.env
+.DS_Store
+__pycache__/
+*.pyc
+.vscode/
+*.log
+dataset/toy_example/20_lod/**/*.splat

@@ -1,0 +1,21 @@
+{
+  "name": "vpap-wt3dgs-server",
+  "version": "1.0.0",
+  "description": "WebTransport tile server with VPAP (viewport/LOD-aware sendOrder) and flat baseline",
+  "type": "module",
+  "scripts": {
+    "start": "node server_vpap.js",
+    "start:vpap": "node server_vpap.js",
+    "start:baseline": "node server_baseline_flat_sendorder.js"
+  },
+  "keywords": ["webtransport", "quic", "3dgs", "vpap"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fails-components/webtransport": "^1.4.8",
+    "@fails-components/webtransport-transport-http3-quiche": "^1.4.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
