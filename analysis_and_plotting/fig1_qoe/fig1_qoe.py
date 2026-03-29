@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""仅生成 Fig1B：按 run index 的 Final QoE 折线图 → Fig1B_QoE_Line_by_Run.pdf"""
+
 from __future__ import annotations
 
 from pathlib import Path
