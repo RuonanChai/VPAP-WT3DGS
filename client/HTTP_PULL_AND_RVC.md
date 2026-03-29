@@ -1,55 +1,61 @@
-# B1 / B2: HTTP pull (Fetch) and WebSocket RVC (reference)
+# B1 / B2: HTTP pull (Fetch) and when WebSocket appears
 
-This artifact’s **`SLM2Loader.js`** combines:
+## Paper baselines (B1 / B2)
 
-1. **Remote culling / scheduling** — WebSocket (B1/B2) or WebTransport camera stream (B3/B4).
-2. **Tile payload download** — **HTTP GET** per splat URL built under `gsResource` (traditional pull).
+In the reported evaluation, **B1** and **B2** are **pull-only** static hosting with **client-side** tile selection:
 
-WebTransport ingestion (B3/B4) is documented in the main `README.md` and `client/README.md`. This file maps **B1/B2** to concrete code paths.
+- **B1:** Caddy with **`protocols h1` only**, `Cache-Control: no-store`, tiles under **`/assets/20_lod/…`**, same-origin static assets — see the authors’ **`campus2_bounding_boxes-HTTP1.1`** + built **`slm2viewer_HTTP1.1`** layout (not vendored in this artifact). The viewer uses **`useLocalRVC: true`** and leaves **`rcServerAddress`** empty; **no WebSocket** RVC channel.
+
+- **B2:** Caddy with **`protocols h1 h2 h3`**, TLS, same static URL layout over **HTTP/3** — parallel to **`campus2_bounding_boxes-caddy_HTTP3`** and the corresponding viewer build. Again **client-side RVC**, **no WebSocket**.
+
+Reproduce the same *shape* inside this repo with **`server/Caddyfile.b1.example`** and **`server/Caddyfile.b2.example`** (paths point at `dataset/toy_example/`).
 
 ---
 
-## 1. WebSocket RVC (B1 / B2 control plane)
+## Extracted `SLM2Loader.js` (two scheduling modes)
+
+1. **Local RVC** — `useLocalRVC: true`: `sceneCullingLocal()` drives tile lists; **HTTP GET** still loads splats via `gsResource` (see below). Matches the paper’s B1/B2 control plane.
+
+2. **Server WebSocket RVC** — `useLocalRVC: false` and non-empty **`rcServerAddress`** (`ws://…`): `sceneCulling()` sends camera JSON on a WebSocket and receives `list` / `weight` payloads. This path is **optional** for integrations/tests; it is **not** what the paper labels as the HTTP/1.1 baseline transport.
+
+---
+
+## HTTP pull for `.splat` tiles (B1 / B2 data plane)
 
 | Step | Where in `SLM2Loader.js` |
 |------|-------------------------|
-| Connect | `startConnect()` — skips WebTransport when `schedulingStrategy !== 'webtransport'` and `rcServerAddress` is not `webtransport://…`; opens `WebSocket(this.server_ip)`. |
-| Send camera | `sceneCulling()` — builds `mvp`, optional **`cameraPos`** (root-local, aligned with `tileSelection.js` on the server), then `ws.send(JSON.stringify(camera_data))`. |
-| Receive tile list | `ws.onmessage` — parses UTF-8 JSON with `list` and `weight` (each JSON-encoded array), maps ids through `tilesMapping`, calls `generateLoadingTasks_GS(tileList, weightList)`. |
+| Build URLs | `generateLoadingTasks_GS()` — `url = this.gsResource + loadingLOD + "/" + tile_hash + "-L" + loadingLOD + ".splat"`. |
+| Issue requests | `processLoadingTasks_GS()` — `SplatLoader().load(nextTask.url, …)` → browser **Fetch/XHR** (HTTP/1.1 on B1, HTTP/3 on B2 when the page origin uses QUIC). |
+| Initial list (optional) | `initLoad()` — `FileLoader` GETs `modelToLoadList_GS.json` from `resourcesBaseUrl` when not using WebTransport. |
 
-**Server-side counterpart (artifact):** `server/server_b1_http_rvc.js` — HTTP/1.1 static files + WebSocket on `/rvc` (configurable via `B1_WS_PATH`). For B2, Caddy terminates TLS/HTTP/3 for static files and **proxies** `/rvc` to the same Node process (`server/Caddyfile.b2.example`).
+**Telemetry:** call `TileTelemetry.recordLogicalRequestStart` / `recordReq` **before** the fetch for each tile when instrumenting B1/B2; B3/B4 use `recordFromStream` for WebTransport.
 
 ---
 
-## 2. HTTP pull for `.splat` tiles (B1 / B2 data plane)
+## WebSocket RVC (optional; extracted client only)
 
 | Step | Where in `SLM2Loader.js` |
 |------|-------------------------|
-| Build URLs | `generateLoadingTasks_GS()` — for each `(tile_hash, weight)` from RVC: `url = this.gsResource + loadingLOD + "/" + tile_hash + "-L" + loadingLOD + ".splat"`. |
-| Issue requests | `processLoadingTasks_GS()` — `SplatLoader().load(nextTask.url, …)` which uses the browser **Fetch/XHR** stack (HTTP/1.1 on B1, HTTP/3 on B2 when the origin is served over QUIC). |
-| Initial list (optional) | `initLoad()` — `FileLoader` GETs `modelToLoadList_GS.json` from `resourcesBaseUrl` when not using WebTransport; seeds work before the first RVC message. |
+| Connect | `startConnect()` opens `WebSocket(this.server_ip)` when not using WebTransport. |
+| Send camera | `sceneCulling()` — `mvp` + **`cameraPos`** (root-local), `ws.send(JSON.stringify(camera_data))`. |
+| Receive tile list | `ws.onmessage` — JSON with string fields `list` / `weight` (JSON-encoded arrays), `generateLoadingTasks_GS(...)`. |
 
-**Telemetry (fair TTFB):** call `TileTelemetry.recordLogicalRequestStart` / `recordReq` **before** the underlying fetch starts for each tile task (your `CacheMgr` / loader wrapper should hook this; B3/B4 use `recordFromStream` instead).
-
----
-
-## 3. Configuration knobs (viewer)
-
-Typical B1 setup:
-
-- `rcServerAddress`: `ws://<host>:7080/rvc` (or your deployed path).
-- `resourcesBaseUrl`: `http://<host>:7080/` (must serve `sceneWeb.json`, mapping JSON, etc.).
-- `gsResource`: `http://<host>:7080/20_lod/` (trailing slash must concatenate to `L{n}/{hash}-L{n}.splat`).
-- `schedulingStrategy`: anything other than `'webtransport'` if you are not using WT.
-
-Typical B2 setup (Caddy + B1 WS-only):
-
-- `resourcesBaseUrl` / `gsResource`: `https://<host>:7443/…` (same TLS trust as experiments).
-- `rcServerAddress`: `wss://<host>:7443/rvc` (proxied to Node `server_b1_http_rvc.js` on port 7080).
+**Optional server:** `server/server_b1_http_rvc.js` — Node static + WebSocket; default path **`/rvc`** is **not** standard — set **`B1_WS_PATH`** if you need another mount. **`npm run start:b1:ws-rvc`** in `server/`.
 
 ---
 
-## 4. Relation to B3 / B4
+## Viewer URLs (artifact Caddy examples)
 
-- **B3 / B4** disable the per-tile HTTP queue for pushed tiles when `schedulingStrategy === 'webtransport'` (see `generateLoadingTasks_GS` early return) and ingest via `receiveTileStreams()` instead.
-- **B1 / B2** rely on **RVC + repeated GETs** as described above; keep **`tileSelection.js`** semantics aligned on the server so all baselines see the same tile *set* when using `reference_manifest.json`.
+**B1 (`Caddyfile.b1.example`, port 8080):**
+
+- `resourcesBaseUrl`: `http://<host>:8080/assets`
+- `gsResource`: `http://<host>:8080/assets/20_lod/`
+- `useLocalRVC: true`, `rcServerAddress: ""`
+
+**B2 (`Caddyfile.b2.example`, port 8543, HTTPS):**
+
+- `resourcesBaseUrl`: `https://<host>:8543/assets`
+- `gsResource`: `https://<host>:8543/assets/20_lod/`
+- `useLocalRVC: true`, `rcServerAddress: ""`
+
+WebTransport (B3/B4) is documented in the root **`README.md`**.

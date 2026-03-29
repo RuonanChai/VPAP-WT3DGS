@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node server_vpap.js",
     "start:vpap": "node server_vpap.js",
-    "start:b1": "node server_b1_http_rvc.js",
+    "start:b1": "caddy run --config Caddyfile.b1.example",
+    "start:b1:ws-rvc": "node server_b1_http_rvc.js",
+    "start:b2": "caddy run --config Caddyfile.b2.example",
     "start:b3": "node server_baseline_flat_sendorder.js",
     "start:baseline": "node server_baseline_flat_sendorder.js"
   },

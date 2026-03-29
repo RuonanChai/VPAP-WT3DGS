@@ -1,0 +1,37 @@
+# B1: HTTP/1.1-only static hosting (matches the paper’s pull baseline: no WebSocket RVC).
+# Parallel layout to the authors’ campus2_bounding_boxes-HTTP1.1 + slm2viewer_HTTP1.1 setup:
+#   protocols h1, Cache-Control: no-store, tiles under /assets/20_lod/, viewer uses useLocalRVC: true.
+#
+# From server/:
+#   caddy run --config Caddyfile.b1.example
+#
+# Populate dataset/toy_example/ first. Map web3d.local to 127.0.0.1 if you use that host name.
+
+{
+	auto_https off
+	admin off
+	servers {
+		protocols h1
+	}
+}
+
+http://127.0.0.1:8080, http://localhost:8080, http://web3d.local:8080 {
+	bind 0.0.0.0
+
+	handle_path /assets/* {
+		root * ../dataset/toy_example
+		header Cache-Control "no-store"
+		header Connection "keep-alive"
+		file_server
+	}
+
+	handle {
+		root * ../dataset/toy_example
+		try_files {path} /index.html
+		file_server
+		header Cache-Control "no-store"
+		header Connection "keep-alive"
+	}
+
+	header Access-Control-Allow-Origin *
+}

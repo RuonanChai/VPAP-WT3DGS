@@ -1,6 +1,10 @@
-# VPAP-WT3DGS — Viewport- and LOD-Aware Prioritization over WebTransport for Tiled 3D Gaussian Splatting
+# VPAP-WT3DGS — Research artifact and reproduction package
 
-This repository is a **standalone artifact**: VPAP scheduling on the **WebTransport `sendOrder`** API, a matching **browser client** path (stream ingestion + telemetry), **network emulation** notes, a **toy dataset layout**, and **plotting scripts** aligned with the paper’s figures.
+**Viewport- and LOD-aware prioritization over WebTransport for tiled 3D Gaussian splatting**
+
+This repository provides the standalone artifact for reproducing the evaluation in our paper. It implements a unified 3D Gaussian Splatting (3DGS) streaming testbed to compare four transport strategies under strictly controlled fairness: legacy pull-based protocols (HTTP/1.1 and HTTP/3), naive push (vanilla WebTransport), and our proposed VPAP (Viewport- and LOD-Aware Prioritization over WebTransport).
+
+To facilitate end-to-end reproducibility, this repository includes the complete evaluation pipeline: client/server modules, network emulation configurations, a sample dataset layout, and automated plotting scripts to generate the paper’s figures.
 
 ---
 
@@ -16,81 +20,73 @@ This repository is a **standalone artifact**: VPAP scheduling on the **WebTransp
 
 ---
 
-## (b) Quick start — run each baseline
+## (b) Quick start — reproducing the baselines
 
-**Prerequisites (all baselines):** populate `dataset/toy_example/` per `dataset/README.md` (splats, `custom_bounding_boxes_mapping-campus2.json`, `reference_manifest.json`). For WebTransport (B3/B4), place TLS files under `server/certs/` (`web3d.local.pem`, `web3d.local-key.pem`) or set `VPAP_TLS_*` / `VPAP_CERT_DIR`.
+**Prerequisites (all baselines):** Populate `dataset/toy_example/` per `dataset/README.md` (splats, `custom_bounding_boxes_mapping-campus2.json`, `reference_manifest.json`). **B1/B2** require [Caddy](https://caddyserver.com/) v2+. **B3/B4** require TLS material under `server/certs/` (`web3d.local.pem`, `web3d.local-key.pem`) or `VPAP_TLS_*` / `VPAP_CERT_DIR`.
 
 ```bash
 cd server
 npm install
 ```
 
-### B1 — HTTP/1.1 static + WebSocket RVC
+### B1
 
-Starts **HTTP/1.1** file server and a **WebSocket** RVC endpoint on the same port (default **7080**).
+**Paper baseline:** HTTP/1.1 **pull** only — **Caddy** serves static tiles ( **`protocols h1`**, `Cache-Control: no-store` ). Tile **scheduling is on the client** (`useLocalRVC: true`, empty `rcServerAddress`); this matches the authors’ **`campus2_bounding_boxes-HTTP1.1`** + **`slm2viewer_HTTP1.1`** workflow (those trees are not vendored here).
+
+**In this repository**, run the portable analogue:
 
 ```bash
 cd server
 npm run start:b1
 ```
 
-- Static root: `../dataset/toy_example` (override with `VPAP_ASSETS_DIR`).
-- WebSocket URL path: **`/rvc`** (override with `B1_WS_PATH`).
-- **Viewer:** `rcServerAddress` = `ws://<host>:7080/rvc`, `resourcesBaseUrl` = `http://<host>:7080/`, `gsResource` = `http://<host>:7080/20_lod/`, `schedulingStrategy` ≠ `webtransport` and not a `webtransport://` URL.
+(`caddy run --config Caddyfile.b1.example` — default **8080**, URLs under **`/assets/…`** mapped to `dataset/toy_example/`.)
 
-HTTP pull + RVC flow is summarized in **`client/HTTP_PULL_AND_RVC.md`**.
+**Viewer:** `resourcesBaseUrl` = `http://<host>:8080/assets`, `gsResource` = `http://<host>:8080/assets/20_lod/`, `useLocalRVC: true`, `rcServerAddress: ""`, `schedulingStrategy` not `webtransport`.
 
-### B2 — HTTP/3 static + WSS (Caddy) + same RVC logic as B1
+**Optional:** `npm run start:b1:ws-rvc` runs **`server_b1_http_rvc.js`** — a **Node** shim for the extracted `SLM2Loader` **WebSocket** RVC path only (default mount **`/rvc`**, configurable via `B1_WS_PATH`). That is **not** the paper’s B1 transport.
 
-B2 uses **Caddy** for **HTTP/3** static serving and proxies **`/rvc`** to the Node B1 WebSocket server.
+Details: **`client/HTTP_PULL_AND_RVC.md`**.
 
-**Terminal A — WebSocket only (no static files from Node):**
+### B2
 
-```bash
-cd server
-# Linux / macOS / Git Bash
-B1_STATIC_ENABLED=0 B1_HTTP_PORT=7080 node server_b1_http_rvc.js
-```
-
-```cmd
-REM Windows CMD
-set B1_STATIC_ENABLED=0
-set B1_HTTP_PORT=7080
-node server_b1_http_rvc.js
-```
-
-**Terminal B — Caddy (edit `server/Caddyfile.b2.example` for host/certs if needed):**
+**Paper baseline:** same pull + **client-side RVC** as B1, over **HTTP/3** (Caddy **`protocols h1 h2 h3`**, TLS), parallel to **`campus2_bounding_boxes-caddy_HTTP3`** and the corresponding viewer build — **no WebSocket** RVC.
 
 ```bash
 cd server
-./scripts/start_b2_caddy.sh
+npm run start:b2
 ```
 
-On Windows: `powershell -ExecutionPolicy Bypass -File scripts\start_b2_caddy.ps1`
+(or `./scripts/start_b2_caddy.sh` / `scripts\start_b2_caddy.ps1` — same `Caddyfile.b2.example`, default HTTPS **8543**; edit hosts / Caddyfile for `web3d.local` if needed.)
 
-- **Viewer:** `resourcesBaseUrl` / `gsResource` → `https://<host>:7443/…`, `rcServerAddress` → `wss://<host>:7443/rvc` (trust the same CA as in the Caddyfile).
+**Viewer:** `resourcesBaseUrl` = `https://<host>:8543/assets`, `gsResource` = `https://<host>:8543/assets/20_lod/`, `useLocalRVC: true`, `rcServerAddress: ""`. Trust the cert in `server/certs/`.
 
-### B3 — WebTransport, flat `sendOrder` (native WT baseline)
+### B3
+
+WebTransport **push** with **uniform** `sendOrder` (vanilla WT baseline).
 
 ```bash
 cd server
 npm run start:b3
 ```
 
-Default: UDP **9444**, path **`/wt`**. Client: `webtransport://<host>:9444/wt`, `schedulingStrategy: 'webtransport'`.
+UDP **9444**, path **`/wt`**. Client: `webtransport://<host>:9444/wt`, `schedulingStrategy: 'webtransport'`.
 
-### B4 — VPAP (WebTransport + viewport/LOD-aware `sendOrder`)
+### B4
+
+WebTransport **push** with **VPAP** (`sendOrder` by viewport/LOD).
 
 ```bash
 cd server
 npm run start:vpap
 ```
 
-Default: UDP **8444**, path **`/wt`**. Client: `webtransport://<host>:8444/wt`, `schedulingStrategy: 'webtransport'`.
+UDP **8444**, path **`/wt`**. Client: `webtransport://<host>:8444/wt`, `schedulingStrategy: 'webtransport'`.
 
-### Client modules
+### Client integration
 
-Under **`client/`**: **`SLM2Loader.js`** (WT + WebSocket + HTTP pull), **`TileTelemetry.js`**, **`SpatioTemporalQoETracker.js`**. Integrate into your viewer bundle; see **`client/README.md`** and **`client/HTTP_PULL_AND_RVC.md`**.
+**`client/`:** **`SLM2Loader.js`**, **`TileTelemetry.js`**, **`SpatioTemporalQoETracker.js`** — see **`client/README.md`**.
+
 
 ---
 
@@ -108,7 +104,7 @@ For Mininet topology, place the tile server(s) and the browser host on the corre
 
 | Directory | Contents |
 |-----------|----------|
-| **`server/`** | `server_vpap.js` (B4), `server_baseline_flat_sendorder.js` (B3), **`server_b1_http_rvc.js` (B1)**, `Caddyfile.b2.example` + **`scripts/start_b2_caddy.*` (B2)**, `tileSelection.js`, `StreamMetrics.js`, `VPAP_SCHEDULING.md`, **`README.md`** |
+| **`server/`** | **`Caddyfile.b1.example` (B1)**, **`Caddyfile.b2.example` (B2)**, `server_baseline_flat_sendorder.js` (B3), `server_vpap.js` (B4), optional **`server_b1_http_rvc.js`** (WebSocket RVC shim), `tileSelection.js`, `StreamMetrics.js`, `VPAP_SCHEDULING.md`, **`README.md`**, `scripts/` |
 | **`client/`** | `SLM2Loader.js` (WT + WebSocket + HTTP pull), `TileTelemetry`, `SpatioTemporalQoETracker`, **`HTTP_PULL_AND_RVC.md`** |
 | **`network_emulation/`** | `tc` example + README |
 | **`dataset/`** | Toy layout, examples, **no large binaries** in git by default (see `.gitignore`) |
