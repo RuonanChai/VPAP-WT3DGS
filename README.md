@@ -94,6 +94,8 @@ UDP **8444**, path **`/wt`**. Client: `webtransport://<host>:8444/wt`, `scheduli
 
 See **`network_emulation/README.md`** and **`network_emulation/tc_shape_example.sh`** for Linux **netem** delay/loss.
 
+For the full **3×3×3 bandwidth × RTT × loss grid** (paper C1), use **`experiments/c1_netem/run_netem_grid.py`** — see **`experiments/README.md`**.
+
 **Mininet:** we applied the **same** emulated network (bandwidth, delay, loss, queue discipline on the bottleneck between server and client) for **B1, B2, B3, and VPAP (B4)**. Only the server stack and client endpoints change across baselines; **do not** change `tc`/Mininet parameters between runs you intend to compare.
 
 For Mininet topology, place the tile server(s) and the browser host on the correct sides of the bottleneck and document the identical profile in your paper’s experimental setup section.
@@ -109,6 +111,49 @@ For Mininet topology, place the tile server(s) and the browser host on the corre
 | **`network_emulation/`** | `tc` example + README |
 | **`dataset/`** | Toy layout, examples, **no large binaries** in git by default (see `.gitignore`) |
 | **`analysis_and_plotting/`** | `fig1_qoe/`, **`fig2_throughput/`** (`Fig2A_Throughput.py`, `Fig2B_Efficiency.py`), `fig3_cpu_memory/` — Matplotlib scripts (inputs: aggregated CSVs from your evaluation pipeline) |
+| **`experiments/`** | Supplementary evaluation drivers: **C1** netem grid, **C2** WTS scheduling ablation, **C3** dynamic viewport traces, telemetry gates, aggregation scripts |
+
+---
+
+## (e) Supplementary experiments (revised evaluation)
+
+Beyond the four baseline servers (§b), the paper reports three controlled supplementary studies plus the Phase3 protocol comparison:
+
+| Study | Directory | What it isolates |
+|-------|-----------|------------------|
+| **Phase3** | Baselines B1–B4 (§b) | Transport stack: HTTP pull vs WebTransport push vs WT+VPAP |
+| **C1** | `experiments/c1_netem/` | WAN stress: identical `tc netem` grid, B3 (plain WT) vs B4 (WT+VPAP) |
+| **C2** | `experiments/c2_scheduling_ablation/` | Send ordering only: WTS-N/L/D/F/V on the same B4 server (`VPAP_SCHEDULE_POLICY`) |
+| **C3** | `experiments/c3_dynamic_viewport/` | Camera motion: four 60 s replay traces, B3 vs B4 |
+
+**Start here:** `experiments/README.md`
+
+Minimal workflow:
+
+```bash
+export VPAP_EXPERIMENT_CMD="python /path/to/your/run_experiment.py"
+
+# C2 — five scheduling policies (fixed viewport, n=5 each)
+python experiments/c2_scheduling_ablation/run_c2_batch.py
+python experiments/c2_scheduling_ablation/summarize_c2_ablation.py --baseline-dir logs/baseline4
+
+# C1 — 3×3×3 netem grid (B3 vs B4)
+python experiments/c1_netem/run_netem_grid.py --runs-per-cell 3
+
+# C3 — four traces × two baselines
+python experiments/c3_dynamic_viewport/run_c3_batch.py --runs-per-cell 3
+```
+
+Each trial must write `logs/<baseline>/run_<id>/metrics_client.json`. Pass/fail is checked with `experiments/common/verify_telemetry_gate.py`.
+
+**Scheduling policies (C2)** are selected via environment variable on `server_vpap.js`:
+
+```bash
+VPAP_SCHEDULE_POLICY=lod node server/server_vpap.js   # WTS-L
+VPAP_SCHEDULE_POLICY=vpap node server/server_vpap.js  # WTS-V (default)
+```
+
+See `server/VPAP_SCHEDULING.md` for `sendOrder` encoding.
 
 ---
 

@@ -26,6 +26,20 @@ import { getFixedSelectionFromList, selectTiles } from './tileSelection.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Scheduling ablation (C2): WTS-N/L/D/F/V via VPAP_SCHEDULE_POLICY
+function normalizeSchedulePolicy(raw) {
+  const v = (raw || 'WTS-V').trim();
+  const map = {
+    none: 'WTS-N', 'WTS-N': 'WTS-N',
+    lod: 'WTS-L', 'WTS-L': 'WTS-L',
+    dist: 'WTS-D', 'WTS-D': 'WTS-D',
+    frustum: 'WTS-F', 'WTS-F': 'WTS-F',
+    vpap: 'WTS-V', 'WTS-V': 'WTS-V',
+  };
+  return map[v] || 'WTS-V';
+}
+const SCHEDULE_POLICY = normalizeSchedulePolicy(process.env.VPAP_SCHEDULE_POLICY);
+
 // Settings
 const PORT = Number(process.env.VPAP_PORT || 8444);
 const SCALING_FACTOR = 100.0; // Client world scale factor (legacy)
@@ -623,14 +637,34 @@ async function processCameraData(cameraData, session) {
     // Remember tile set for next frame
     sessionLastTileHashes.set(session, currentTileHashes);
     
-    // Two-level order: (1) all L1 before any L2..L4; (2) within same LOD, higher VPAP first
-    requiredTiles.sort((a, b) => {
-      if (a.lod !== b.lod) return a.lod - b.lod; // L1 before L2 before L3 before L4
-      if (a.vpapScore != null && b.vpapScore != null) {
-        return b.vpapScore - a.vpapScore; // same LOD: higher VPAP first
-      }
-      return a.distance - b.distance;
-    });
+    switch (SCHEDULE_POLICY) {
+      case 'WTS-N':
+        break;
+      case 'WTS-L':
+        requiredTiles.sort((a, b) => a.lod - b.lod);
+        break;
+      case 'WTS-D':
+        requiredTiles.sort((a, b) => a.distance - b.distance);
+        break;
+      case 'WTS-F':
+        requiredTiles.sort((a, b) => {
+          const aInView = (a.vpapScore != null && a.vpapScore > 0) ? 0 : 1;
+          const bInView = (b.vpapScore != null && b.vpapScore > 0) ? 0 : 1;
+          if (aInView !== bInView) return aInView - bInView;
+          return a.distance - b.distance;
+        });
+        break;
+      case 'WTS-V':
+      default:
+        requiredTiles.sort((a, b) => {
+          if (a.lod !== b.lod) return a.lod - b.lod;
+          if (a.vpapScore != null && b.vpapScore != null) {
+            return b.vpapScore - a.vpapScore;
+          }
+          return a.distance - b.distance;
+        });
+        break;
+    }
     
     const tilesToPush = requiredTiles;
     
@@ -820,9 +854,27 @@ async function pushSingleTile(session, tile, retryCount = 0) {
       // ignore .closed probe errors
     }
 
-    // VPAP: lower sendOrder => higher priority; higher vpap => lower sendOrder within same LOD
     const vpap = tile.vpapScore ?? 0.5;
-    const sendOrder = BigInt(tile.lod * 10000 + Math.floor((1 - vpap) * 1000));
+    const dist = tile.distance ?? 9999;
+    let sendOrder;
+    switch (SCHEDULE_POLICY) {
+      case 'WTS-N':
+        sendOrder = BigInt(0);
+        break;
+      case 'WTS-L':
+        sendOrder = BigInt(tile.lod * 10000);
+        break;
+      case 'WTS-D':
+        sendOrder = BigInt(Math.floor(dist));
+        break;
+      case 'WTS-F':
+        sendOrder = BigInt((vpap > 0 ? 0 : 50000) + Math.floor(dist));
+        break;
+      case 'WTS-V':
+      default:
+        sendOrder = BigInt(tile.lod * 10000 + Math.floor((1 - vpap) * 1000));
+        break;
+    }
     const tileStream = await session.createUnidirectionalStream({
       sendOrder: sendOrder,
       sendGroup: null
@@ -925,6 +977,7 @@ try {
   console.log(`🚀 WebTransport Tile Server running on port ${PORT}`);
   console.log(`📁 Tiles path: ${TILES_BASE_PATH}`);
   console.log(`📜 Certificate: ${CERT_PATH}`);
+  console.log(`📋 Schedule policy: ${SCHEDULE_POLICY} (VPAP_SCHEDULE_POLICY=${process.env.VPAP_SCHEDULE_POLICY || 'default'})`);
   console.log('✅ Server started, waiting for connections...');
 } catch (error) {
   console.error('❌ Failed to start server:', error);

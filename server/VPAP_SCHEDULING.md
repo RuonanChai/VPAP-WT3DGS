@@ -26,6 +26,20 @@ await session.createUnidirectionalStream({ sendOrder, sendGroup: null });
 
 **Smaller `sendOrder` ⇒ higher send priority** under the scheduler used by `@fails-components/webtransport`. LOD is encoded in the high-order part (`lod * 10000`); viewport score refines ordering within the same LOD via `(1 - vpap) * 1000`.
 
+## C2 scheduling ablation (`VPAP_SCHEDULE_POLICY`)
+
+Set **`VPAP_SCHEDULE_POLICY`** before starting `server_vpap.js` (see `experiments/c2_scheduling_ablation/restart_wt_server.sh`):
+
+| Policy | Env value | Tile sort order | `sendOrder` |
+|--------|-----------|-----------------|-------------|
+| WTS-N | `none` | FIFO (no reorder) | `0` |
+| WTS-L | `lod` | Coarse-to-fine LOD | `lod * 10000` |
+| WTS-D | `dist` | Nearest first | `floor(distance)` |
+| WTS-F | `frustum` | In-frustum first, then distance | `(in_view ? 0 : 50000) + floor(distance)` |
+| WTS-V | `vpap` | LOD ascending, then utility descending | `lod * 10000 + floor((1-vpap)*1000)` |
+
+All variants share the same WebTransport transport, locked 300-tile reference set, and client telemetry schema.
+
 ## Baseline without VPAP
 
 **`server_baseline_flat_sendorder.js`** uses the same transport and batching but **does not** differentiate `sendOrder` by VPAP (flat priority), for controlled comparison.

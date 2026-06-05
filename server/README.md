@@ -7,7 +7,10 @@
 | `npm run start:b2` | **B2** | **Caddy** HTTP/3 static (`Caddyfile.b2.example`). |
 | `npm run start:b3` | **B3** | WebTransport flat `sendOrder`, UDP **9444**, `/wt`. |
 | `npm run start:vpap` | **B4** | VPAP WebTransport, UDP **8444**, `/wt`. |
+| `VPAP_SCHEDULE_POLICY=<policy> node server_vpap.js` | **B4 variants** | C2 ablation: `none`, `lod`, `dist`, `frustum`, `vpap` (WTS-N/L/D/F/V). |
 
 Install [Caddy](https://caddyserver.com/) for B1/B2. TLS for B2/B3/B4: `server/certs/` or paths in Caddyfile / `VPAP_TLS_*`.
+
+See **`experiments/c2_scheduling_ablation/restart_wt_server.sh`** for policy switching during C2 batch runs.
 
 See the repository root **`README.md`** for Mininet / `tc` and viewer URLs.

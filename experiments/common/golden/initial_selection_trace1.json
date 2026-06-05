@@ -1,0 +1,1802 @@
+[
+  {
+    "tile_id": "tile_20_524288_524277",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524268_524289",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524273_524286",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524278_524283",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524283_524280",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524271_524287",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524276_524284",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524281_524281",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524286_524278",
+    "lod": 1,
+    "weight": 500,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524283_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524286_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524288_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524281",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524282",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524285_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524287_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524283",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524284_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524286_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524289_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524281",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524282",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524283_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524288_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524281",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524282",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524285_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524287_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524284_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524289_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524286_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524288_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524281",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524281",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524286_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524288_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524289_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524280",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524289_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524289_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524279",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524289_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524290_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524277",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524278",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524291_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524276",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524292_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524293_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524275",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524274",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524273",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524294_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524272",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524295_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524296_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524297_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524271",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524298_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524269",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524270",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524299_524263",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524263",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524266",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524306_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524307_524267",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524308_524268",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524300_524262",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524262",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524301_524263",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524262",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524302_524263",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524262",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524263",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524303_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524262",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524263",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524304_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524264",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  },
+  {
+    "tile_id": "tile_20_524305_524265",
+    "lod": 4,
+    "weight": 17000,
+    "distance": 0
+  }
+]

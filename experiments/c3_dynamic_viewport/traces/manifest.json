@@ -1,0 +1,8 @@
+{
+  "trace_fixed": "trace_fixed.json",
+  "trace_slow_pan": "trace_slow_pan.json",
+  "trace_fast_turn": "trace_fast_turn.json",
+  "trace_abrupt_jump": "trace_abrupt_jump.json",
+  "trace_random_walk": "trace_random_walk.json",
+  "trace_orbit": "trace_orbit.json"
+}

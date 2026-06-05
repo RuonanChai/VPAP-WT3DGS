@@ -7,4 +7,5 @@ __pycache__/
 *.pyc
 .vscode/
 *.log
+logs/
 dataset/toy_example/20_lod/**/*.splat
