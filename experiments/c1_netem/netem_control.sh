@@ -1,6 +1,13 @@
 #!/bin/bash
 # Apply or reset Linux tc netem shaping (bandwidth, RTT, loss).
+#
+# Default recipe uses a single netem root with fixed one-way delay (RTT/2) and
+# optional loss (no jitter distribution). HTB+jitter can interact poorly with
+# QUIC on some hosts; override with custom tc if your platform requires it.
+# Set NETEM_IFACE to the bottleneck egress device (default: lo).
 set -euo pipefail
+TC_BIN="tc"
+if ! tc -V >/dev/null 2>&1; then TC_BIN="sudo tc"; fi
 
 IFACE="${NETEM_IFACE:-lo}"
 
@@ -16,23 +23,20 @@ apply_netem() {
     local LOSS_PCT="${3:-0}"
     local DELAY_MS=$(( RTT_MS / 2 ))
 
-    echo "[netem] ${BW_MBPS}Mbps RTT=${RTT_MS}ms loss=${LOSS_PCT}% on ${IFACE}"
-    sudo tc qdisc del dev "$IFACE" root 2>/dev/null || true
-    sudo tc qdisc add dev "$IFACE" root handle 1: htb default 10
-    sudo tc class add dev "$IFACE" parent 1: classid 1:10 htb \
-        rate "${BW_MBPS}mbit" ceil "${BW_MBPS}mbit" burst 15k
+    echo "[netem] cell_bw=${BW_MBPS}Mbps RTT=${RTT_MS}ms loss=${LOSS_PCT}% on ${IFACE} (fixed-delay netem; no HTB/jitter)"
+    $TC_BIN qdisc del dev "$IFACE" root 2>/dev/null || true
     if awk "BEGIN {exit !($LOSS_PCT > 0)}"; then
-        sudo tc qdisc add dev "$IFACE" parent 1:10 handle 10: netem \
-            delay "${DELAY_MS}ms" 5ms distribution normal loss "${LOSS_PCT}%"
+        $TC_BIN qdisc add dev "$IFACE" root handle 1: netem \
+            delay "${DELAY_MS}ms" loss "${LOSS_PCT}%" limit 10000
     else
-        sudo tc qdisc add dev "$IFACE" parent 1:10 handle 10: netem \
-            delay "${DELAY_MS}ms" 5ms distribution normal
+        $TC_BIN qdisc add dev "$IFACE" root handle 1: netem \
+            delay "${DELAY_MS}ms" limit 10000
     fi
 }
 
 reset_netem() {
     echo "[netem] reset ${IFACE}"
-    sudo tc qdisc del dev "$IFACE" root 2>/dev/null || true
+    $TC_BIN qdisc del dev "$IFACE" root 2>/dev/null || true
 }
 
 [[ $# -ge 1 ]] || usage

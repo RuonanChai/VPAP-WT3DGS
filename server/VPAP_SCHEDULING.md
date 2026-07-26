@@ -6,10 +6,13 @@ This artifact’s reference implementation is in **`server_vpap.js`**.
 
 Function **`computeVPAPScore(cameraPos, cameraForward, tilePos)`** combines:
 
-- **View alignment**: dot product between camera forward and direction to tile center; outside a cone the score is zeroed (implementation threshold `dot < 0.5`).
-- **Distance**: `1 / (1 + dist/2000)` so nearer tiles score higher.
+- **View alignment**: dot product between camera forward and direction to tile center; outside a cone the score is zeroed (`dot < VPAP_TAU`, default `0.5`).
+- **Distance**: `1 / (1 + dist/VPAP_DNORM)` (default `DNORM=2000`) so nearer tiles score higher.
+- **Weights**: `P = VPAP_ALPHA * score_view + VPAP_BETA * score_dist` (defaults `0.7` / `0.3`).
 
-This matches the paper’s **viewport / saliency** term in the priority model (denoted \(S_{i,\ell}\) in the paper; server uses one score per tile for ordering chunks, combined with LOD level).
+Override via environment before starting `server_vpap.js` (OFAT / C6). Also `VPAP_INITIAL_LOAD` controls the initial-load batching threshold (default `100`).
+
+This matches the paper’s **viewport / saliency** term in the priority model.
 
 ## Progressive LOD and send order
 
@@ -39,6 +42,14 @@ Set **`VPAP_SCHEDULE_POLICY`** before starting `server_vpap.js` (see `experiment
 | WTS-V | `vpap` | LOD ascending, then utility descending | `lod * 10000 + floor((1-vpap)*1000)` |
 
 All variants share the same WebTransport transport, locked 300-tile reference set, and client telemetry schema.
+
+## Schedule overhead log
+
+Set **`VPAP_OVERHEAD_LOG=/path/to/overhead.jsonl`**. Each genuine schedule update appends one JSON line with `kind: "schedule"` and `schedule_ms` (scoring + within-tier sort, before stream I/O). Summarize with:
+
+```bash
+python experiments/common/summarize_schedule_overhead.py /path/to/overhead.jsonl
+```
 
 ## Baseline without VPAP
 

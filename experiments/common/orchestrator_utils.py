@@ -28,14 +28,39 @@ def logs_root() -> Path:
 
 def experiment_cmd() -> list[str]:
     """Return argv prefix for one browser trial (must accept --baseline --run-id --cache-state --trace-id)."""
+    # Use separate environment variables to avoid Windows path parsing issues
+    python_path = os.environ.get("VPAP_PYTHON", "").strip()
+    script_path = os.environ.get("VPAP_EXPERIMENT_SCRIPT", "").strip()
+
+    if python_path and script_path:
+        # Verify paths exist
+        if not os.path.isfile(python_path):
+            raise RuntimeError(f"VPAP_PYTHON not found: {python_path}")
+        if not os.path.isfile(script_path):
+            raise RuntimeError(f"VPAP_EXPERIMENT_SCRIPT not found: {script_path}")
+        return [python_path, script_path]
+
+    # Fallback to legacy VPAP_EXPERIMENT_CMD (prefer shlex so Windows paths with spaces work)
     raw = os.environ.get("VPAP_EXPERIMENT_CMD", "").strip()
     if not raw:
         raise RuntimeError(
-            "Set VPAP_EXPERIMENT_CMD to your Selenium driver, e.g.\n"
-            '  export VPAP_EXPERIMENT_CMD="python /path/to/run_experiment.py"\n'
+            "Set VPAP_PYTHON and VPAP_EXPERIMENT_SCRIPT, e.g.:\n"
+            '  export VPAP_PYTHON="$(which python3)"\n'
+            '  export VPAP_EXPERIMENT_SCRIPT="/path/to/run_experiment.py"\n'
             "See experiments/driver/README.md for the required interface."
         )
-    return raw.split()
+    import shlex
+
+    try:
+        parts = shlex.split(raw, posix=os.name != "nt")
+    except ValueError:
+        parts = raw.split()
+    if len(parts) < 2:
+        raise RuntimeError(
+            "VPAP_EXPERIMENT_CMD must contain python + script. "
+            "Prefer VPAP_PYTHON and VPAP_EXPERIMENT_SCRIPT on Windows."
+        )
+    return parts
 
 
 def run_trial(

@@ -4,9 +4,9 @@
 
 In the reported evaluation, **B1** and **B2** are **pull-only** static hosting with **client-side** tile selection:
 
-- **B1:** Caddy with **`protocols h1` only**, `Cache-Control: no-store`, tiles under **`/assets/20_lod/…`**, same-origin static assets — see the authors’ **`campus2_bounding_boxes-HTTP1.1`** + built **`slm2viewer_HTTP1.1`** layout (not vendored in this artifact). The viewer uses **`useLocalRVC: true`** and leaves **`rcServerAddress`** empty; **no WebSocket** RVC channel.
+- **B1:** Caddy with **`protocols h1` only**, `Cache-Control: no-store`, tiles under **`/assets/20_lod/…`**, same-origin static assets — a typical HTTP/1.1 static-tile layout with **client-side RVC** (full viewer trees are not vendored here). The viewer uses **`useLocalRVC: true`** and leaves **`rcServerAddress`** empty; **no WebSocket** RVC channel.
 
-- **B2:** Caddy with **`protocols h1 h2 h3`**, TLS, same static URL layout over **HTTP/3** — parallel to **`campus2_bounding_boxes-caddy_HTTP3`** and the corresponding viewer build. Again **client-side RVC**, **no WebSocket**.
+- **B2:** Caddy with **`protocols h1 h2 h3`**, TLS, same static URL layout over **HTTP/3**. Again **client-side RVC**, **no WebSocket**.
 
 Reproduce the same *shape* inside this repo with **`server/Caddyfile.b1.example`** and **`server/Caddyfile.b2.example`** (paths point at `dataset/toy_example/`).
 

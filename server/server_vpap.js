@@ -40,6 +40,38 @@ function normalizeSchedulePolicy(raw) {
 }
 const SCHEDULE_POLICY = normalizeSchedulePolicy(process.env.VPAP_SCHEDULE_POLICY);
 
+// Utility weights / thresholds (OFAT sensitivity; paper defaults α=0.7, β=0.3, τ=0.5)
+const VPAP_ALPHA = Number(process.env.VPAP_ALPHA ?? 0.7);
+const VPAP_BETA = Number(process.env.VPAP_BETA ?? 0.3);
+const VPAP_TAU = Number(process.env.VPAP_TAU ?? 0.5);
+const VPAP_DNORM = Number(process.env.VPAP_DNORM ?? 2000);
+// Initial-load batching threshold (OFAT "init-load" block); default 100
+const VPAP_INITIAL_LOAD = Number(process.env.VPAP_INITIAL_LOAD ?? 100);
+
+// Optional JSONL of per-update schedule latency (set VPAP_OVERHEAD_LOG to enable)
+const OVERHEAD_LOG = process.env.VPAP_OVERHEAD_LOG
+  ? path.resolve(process.env.VPAP_OVERHEAD_LOG)
+  : '';
+let overheadCount = 0;
+function recordOverhead(event) {
+  if (!OVERHEAD_LOG) return;
+  try {
+    const dir = path.dirname(OVERHEAD_LOG);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.appendFileSync(OVERHEAD_LOG, JSON.stringify({
+      t: Date.now(),
+      policy: SCHEDULE_POLICY,
+      ...event,
+    }) + '\n');
+    overheadCount += 1;
+    if (overheadCount === 1 || overheadCount % 500 === 0) {
+      console.log(`[overhead] samples=${overheadCount} log=${OVERHEAD_LOG}`);
+    }
+  } catch (e) {
+    console.warn('[overhead] write failed:', e.message);
+  }
+}
+
 // Settings
 const PORT = Number(process.env.VPAP_PORT || 8444);
 const SCALING_FACTOR = 100.0; // Client world scale factor (legacy)
@@ -158,8 +190,7 @@ function getTilePosFromHash(hash) {
   };
 }
 
-// VPAP viewport-aware score P(i)
-// P(i) = 0.7 * score_view + 0.3 * score_dist
+// VPAP viewport-aware score P(i) = α·score_view + β·score_dist
 function computeVPAPScore(cameraPos, cameraForward, tilePos) {
   if (!cameraPos || !cameraForward || !tilePos) return 0.5; // fallback
   const cx = cameraPos[0] ?? 0, cy = cameraPos[1] ?? 0, cz = cameraPos[2] ?? 0;
@@ -171,9 +202,9 @@ function computeVPAPScore(cameraPos, cameraForward, tilePos) {
   const vecToTileLen = dist;
   const vx = dx / vecToTileLen, vy = dy / vecToTileLen, vz = dz / vecToTileLen;
   const dot = fx * vx + fy * vy + fz * vz;
-  const scoreView = dot < 0.5 ? 0 : dot;
-  const scoreDist = 1 / (1 + dist / 2000);
-  return 0.7 * scoreView + 0.3 * scoreDist;
+  const scoreView = dot < VPAP_TAU ? 0 : dot;
+  const scoreDist = 1 / (1 + dist / VPAP_DNORM);
+  return VPAP_ALPHA * scoreView + VPAP_BETA * scoreDist;
 }
 
 // Optional frustum test; if disabled, always true
@@ -521,7 +552,8 @@ async function processCameraData(cameraData, session) {
     
     // Heuristic: initial load if few LOD chunks pushed so far
     const totalPushedTiles = Array.from(tileLodSetMap.values()).reduce((sum, lodSet) => sum + lodSet.size, 0);
-    const isInitialLoad = totalPushedTiles < 100;
+    const isInitialLoad = totalPushedTiles < VPAP_INITIAL_LOAD;
+    const tSched0 = performance.now();
     
     // Build missing LOD work items per tile
     let newTileCount = 0;
@@ -664,6 +696,16 @@ async function processCameraData(cameraData, session) {
           return a.distance - b.distance;
         });
         break;
+    }
+
+    // Scoring + within-tier sort only (before stream I/O); used for overhead summaries.
+    if (requiredTiles.length > 0) {
+      recordOverhead({
+        kind: 'schedule',
+        schedule_ms: performance.now() - tSched0,
+        candidates: requiredTiles.length,
+        request_id: cameraData?.id ?? -1,
+      });
     }
     
     const tilesToPush = requiredTiles;

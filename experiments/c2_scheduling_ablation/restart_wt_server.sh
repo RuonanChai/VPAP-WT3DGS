@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Restart B4 WebTransport server (server_vpap.js) with a scheduling policy (C2 ablation).
 set -euo pipefail
 
@@ -35,6 +35,7 @@ echo "[restart] starting policy=$POLICY port=$PORT"
   cd "$SERVER_DIR"
   export VPAP_SCHEDULE_POLICY="$POLICY"
   export VPAP_PORT="$PORT"
+  # Optional: VPAP_OVERHEAD_LOG, VPAP_ALPHA/BETA/TAU, VPAP_ASSETS_DIR, TLS env
   node server_vpap.js >>"$LOGFILE" 2>&1
 ) &
 echo $! >"$PIDFILE"

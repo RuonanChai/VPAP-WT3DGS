@@ -1,10 +1,18 @@
-# VPAP-WT3DGS — Research artifact and reproduction package
+# VPAP-WT3DGS — Anonymous research artifact
 
 **Viewport- and LOD-aware prioritization over WebTransport for tiled 3D Gaussian splatting**
 
-This repository provides the standalone artifact for reproducing the evaluation in our paper. It implements a unified 3D Gaussian Splatting (3DGS) streaming testbed to compare four transport strategies under strictly controlled fairness: legacy pull-based protocols (HTTP/1.1 and HTTP/3), naive push (vanilla WebTransport), and our proposed VPAP (Viewport- and LOD-Aware Prioritization over WebTransport).
+This repository is the **double-blind** code artifact linked from the paper. It provides a standalone testbed to compare HTTP/1.1, HTTP/3, plain WebTransport, and WT+VPAP under a locked admission / useful-byte contract, plus drivers for the supplementary studies reported in the evaluation (network grid, scheduling ablation, motion traces, two-host LAN, cross-scene, OFAT sensitivity, and schedule-overhead logging).
 
-To facilitate end-to-end reproducibility, this repository includes the complete evaluation pipeline: client/server modules, network emulation configurations, a sample dataset layout, and automated plotting scripts to generate the paper’s figures.
+**Not included (by design):** paper figures’ plotting scripts, raw run logs, and scene binary assets. Provide your own dataset under `dataset/` and your own browser automation via `VPAP_EXPERIMENT_CMD`.
+
+---
+
+## Double-blind / anonymity
+
+- Do **not** commit author names, affiliations, emails, personal hostnames, or lab IP inventories.
+- Configure machines only through environment variables (see C4 README).
+- Publish via [Anonymous GitHub](https://anonymous.4open.science) from a public mirror; cite only the `anonymous.4open.science` URL in the submission.
 
 ---
 
@@ -16,155 +24,73 @@ To facilitate end-to-end reproducibility, this repository includes the complete 
 | **OS** | Linux recommended for `tc`; macOS/Windows OK for server + local browser |
 | **Browser** | Chromium with WebTransport enabled |
 | **TLS** | Use [mkcert](https://github.com/FiloSottile/mkcert) or your CA; cert SAN must match the WebTransport URL host/IP |
-| **Python** (plots) | 3.10+; see `analysis_and_plotting/requirements.txt` |
+| **Python** | 3.10+ for experiment drivers (`experiments/requirements.txt`) |
 
 ---
 
-## (b) Quick start — reproducing the baselines
+## (b) Quick start — baselines
 
-**Prerequisites (all baselines):** Populate `dataset/toy_example/` per `dataset/README.md` (splats, `custom_bounding_boxes_mapping-campus2.json`, `reference_manifest.json`). **B1/B2** require [Caddy](https://caddyserver.com/) v2+. **B3/B4** require TLS material under `server/certs/` (`web3d.local.pem`, `web3d.local-key.pem`) or `VPAP_TLS_*` / `VPAP_CERT_DIR`.
-
-```bash
-cd server
-npm install
-```
-
-### B1
-
-**Paper baseline:** HTTP/1.1 **pull** only — **Caddy** serves static tiles ( **`protocols h1`**, `Cache-Control: no-store` ). Tile **scheduling is on the client** (`useLocalRVC: true`, empty `rcServerAddress`); this matches the authors’ **`campus2_bounding_boxes-HTTP1.1`** + **`slm2viewer_HTTP1.1`** workflow (those trees are not vendored here).
-
-**In this repository**, run the portable analogue:
+**Prerequisites:** Populate `dataset/toy_example/` per `dataset/README.md`. **B1/B2** need [Caddy](https://caddyserver.com/) v2+. **B3/B4** need TLS under `server/certs/` or `VPAP_TLS_*` / `VPAP_CERT_DIR`.
 
 ```bash
-cd server
-npm run start:b1
+cd server && npm install
 ```
 
-(`caddy run --config Caddyfile.b1.example` — default **8080**, URLs under **`/assets/…`** mapped to `dataset/toy_example/`.)
+| Baseline | Command | Role |
+|----------|---------|------|
+| B1 | `npm run start:b1` | HTTP/1.1 pull (diagnostic) |
+| B2 | `npm run start:b2` | HTTP/3 pull (diagnostic) |
+| B3 | `npm run start:b3` | Plain WebTransport (WTS-N substrate) |
+| B4 | `npm run start:vpap` | WebTransport + VPAP (`VPAP_SCHEDULE_POLICY`) |
 
-**Viewer:** `resourcesBaseUrl` = `http://<host>:8080/assets`, `gsResource` = `http://<host>:8080/assets/20_lod/`, `useLocalRVC: true`, `rcServerAddress: ""`, `schedulingStrategy` not `webtransport`.
-
-**Optional:** `npm run start:b1:ws-rvc` runs **`server_b1_http_rvc.js`** — a **Node** shim for the extracted `SLM2Loader` **WebSocket** RVC path only (default mount **`/rvc`**, configurable via `B1_WS_PATH`). That is **not** the paper’s B1 transport.
-
-Details: **`client/HTTP_PULL_AND_RVC.md`**.
-
-### B2
-
-**Paper baseline:** same pull + **client-side RVC** as B1, over **HTTP/3** (Caddy **`protocols h1 h2 h3`**, TLS), parallel to **`campus2_bounding_boxes-caddy_HTTP3`** and the corresponding viewer build — **no WebSocket** RVC.
-
-```bash
-cd server
-npm run start:b2
-```
-
-(or `./scripts/start_b2_caddy.sh` / `scripts\start_b2_caddy.ps1` — same `Caddyfile.b2.example`, default HTTPS **8543**; edit hosts / Caddyfile for `web3d.local` if needed.)
-
-**Viewer:** `resourcesBaseUrl` = `https://<host>:8543/assets`, `gsResource` = `https://<host>:8543/assets/20_lod/`, `useLocalRVC: true`, `rcServerAddress: ""`. Trust the cert in `server/certs/`.
-
-### B3
-
-WebTransport **push** with **uniform** `sendOrder` (vanilla WT baseline).
-
-```bash
-cd server
-npm run start:b3
-```
-
-UDP **9444**, path **`/wt`**. Client: `webtransport://<host>:9444/wt`, `schedulingStrategy: 'webtransport'`.
-
-### B4
-
-WebTransport **push** with **VPAP** (`sendOrder` by viewport/LOD).
-
-```bash
-cd server
-npm run start:vpap
-```
-
-UDP **8444**, path **`/wt`**. Client: `webtransport://<host>:8444/wt`, `schedulingStrategy: 'webtransport'`.
-
-### Client integration
-
-**`client/`:** **`SLM2Loader.js`**, **`TileTelemetry.js`**, **`SpatioTemporalQoETracker.js`** — see **`client/README.md`**.
-
+Client integration: `client/` (`SLM2Loader.js`, telemetry helpers). Details: `client/HTTP_PULL_AND_RVC.md`, `server/README.md`.
 
 ---
 
-## (c) Reproducing experiments — network / Mininet
+## (c) Supplementary experiments
 
-See **`network_emulation/README.md`** and **`network_emulation/tc_shape_example.sh`** for Linux **netem** delay/loss.
+See **`experiments/README.md`**. Drivers call your browser script through `VPAP_EXPERIMENT_CMD` / `VPAP_PYTHON`+`VPAP_EXPERIMENT_SCRIPT` (contract in `experiments/driver/README.md`).
 
-For the full **3×3×3 bandwidth × RTT × loss grid** (paper C1), use **`experiments/c1_netem/run_netem_grid.py`** — see **`experiments/README.md`**.
+| ID | Directory | Isolates |
+|----|-----------|----------|
+| Phase3 | §b baselines | Transport stack |
+| **C1** | `experiments/c1_netem/` | 3×3×3 netem grid (B3 vs B4) |
+| **C2** | `experiments/c2_scheduling_ablation/` | WTS-N/L/D/F/V on B4 |
+| **C3** | `experiments/c3_dynamic_viewport/` | Motion traces |
+| **C4** | `experiments/c4_two_host_lan/` | Two-host LAN (+ optional shaped cell) |
+| **C5** | `experiments/c5_cross_scene/` | Indoor bonsai cross-scene |
+| **C6** | `experiments/c6_sensitivity_ofat/` | OFAT on `VPAP_ALPHA/BETA/TAU/INITIAL_LOAD` |
+| Overhead | `VPAP_OVERHEAD_LOG` + `experiments/common/summarize_schedule_overhead.py` | Schedule-update latency JSONL |
 
-**Mininet:** we applied the **same** emulated network (bandwidth, delay, loss, queue discipline on the bottleneck between server and client) for **B1, B2, B3, and VPAP (B4)**. Only the server stack and client endpoints change across baselines; **do not** change `tc`/Mininet parameters between runs you intend to compare.
+Example:
 
-For Mininet topology, place the tile server(s) and the browser host on the correct sides of the bottleneck and document the identical profile in your paper’s experimental setup section.
+```bash
+export VPAP_EXPERIMENT_CMD="python /path/to/run_experiment.py"
+
+python experiments/c2_scheduling_ablation/run_c2_batch.py --runs-per-policy 5
+python experiments/c1_netem/run_netem_grid.py --runs-per-cell 3
+python experiments/c3_dynamic_viewport/run_c3_batch.py --runs-per-cell 3
+python experiments/c4_two_host_lan/run_two_host_batch.py --dry-run
+python experiments/c5_cross_scene/run_bonsai_batch.py --dry-run
+python experiments/c6_sensitivity_ofat/run_sensitivity_batch.py --dry-run
+```
+
+Network shaping: `network_emulation/` and `experiments/c1_netem/netem_control.sh`.
 
 ---
 
 ## (d) Code structure
 
-| Directory | Contents |
-|-----------|----------|
-| **`server/`** | **`Caddyfile.b1.example` (B1)**, **`Caddyfile.b2.example` (B2)**, `server_baseline_flat_sendorder.js` (B3), `server_vpap.js` (B4), optional **`server_b1_http_rvc.js`** (WebSocket RVC shim), `tileSelection.js`, `StreamMetrics.js`, `VPAP_SCHEDULING.md`, **`README.md`**, `scripts/` |
-| **`client/`** | `SLM2Loader.js` (WT + WebSocket + HTTP pull), `TileTelemetry`, `SpatioTemporalQoETracker`, **`HTTP_PULL_AND_RVC.md`** |
-| **`network_emulation/`** | `tc` example + README |
-| **`dataset/`** | Toy layout, examples, **no large binaries** in git by default (see `.gitignore`) |
-| **`analysis_and_plotting/`** | `fig1_qoe/`, **`fig2_throughput/`** (`Fig2A_Throughput.py`, `Fig2B_Efficiency.py`), `fig3_cpu_memory/` — Matplotlib scripts (inputs: aggregated CSVs from your evaluation pipeline) |
-| **`experiments/`** | Supplementary evaluation drivers: **C1** netem grid, **C2** WTS scheduling ablation, **C3** dynamic viewport traces, telemetry gates, aggregation scripts |
-
----
-
-## (e) Supplementary experiments (revised evaluation)
-
-Beyond the four baseline servers (§b), the paper reports three controlled supplementary studies plus the Phase3 protocol comparison:
-
-| Study | Directory | What it isolates |
-|-------|-----------|------------------|
-| **Phase3** | Baselines B1–B4 (§b) | Transport stack: HTTP pull vs WebTransport push vs WT+VPAP |
-| **C1** | `experiments/c1_netem/` | WAN stress: identical `tc netem` grid, B3 (plain WT) vs B4 (WT+VPAP) |
-| **C2** | `experiments/c2_scheduling_ablation/` | Send ordering only: WTS-N/L/D/F/V on the same B4 server (`VPAP_SCHEDULE_POLICY`) |
-| **C3** | `experiments/c3_dynamic_viewport/` | Camera motion: four 60 s replay traces, B3 vs B4 |
-
-**Start here:** `experiments/README.md`
-
-Minimal workflow:
-
-```bash
-export VPAP_EXPERIMENT_CMD="python /path/to/your/run_experiment.py"
-
-# C2 — five scheduling policies (fixed viewport, n=5 each)
-python experiments/c2_scheduling_ablation/run_c2_batch.py
-python experiments/c2_scheduling_ablation/summarize_c2_ablation.py --baseline-dir logs/baseline4
-
-# C1 — 3×3×3 netem grid (B3 vs B4)
-python experiments/c1_netem/run_netem_grid.py --runs-per-cell 3
-
-# C3 — four traces × two baselines
-python experiments/c3_dynamic_viewport/run_c3_batch.py --runs-per-cell 3
-```
-
-Each trial must write `logs/<baseline>/run_<id>/metrics_client.json`. Pass/fail is checked with `experiments/common/verify_telemetry_gate.py`.
-
-**Scheduling policies (C2)** are selected via environment variable on `server_vpap.js`:
-
-```bash
-VPAP_SCHEDULE_POLICY=lod node server/server_vpap.js   # WTS-L
-VPAP_SCHEDULE_POLICY=vpap node server/server_vpap.js  # WTS-V (default)
-```
-
-See `server/VPAP_SCHEDULING.md` for `sendOrder` encoding.
-
----
-
-## Anonymous mirror workflow
-
-1. Push this tree to a **public** GitHub repo (see **`GITHUB_SETUP.md`**).
-2. Open [anonymous.4open.science](https://anonymous.4open.science/dashboard) → **Anonymize your repository** → paste the **GitHub repo URL**.
-3. Use the generated `https://anonymous.4open.science/r/...` link in the paper.
+| Path | Contents |
+|------|----------|
+| `server/` | B1/B2 Caddy examples; B3 flat WT; B4 `server_vpap.js` (policies, utility knobs, optional overhead log) |
+| `client/` | Loader + telemetry helpers |
+| `experiments/` | C1–C6 drivers, golden selection, gates |
+| `network_emulation/` | `tc` examples |
+| `dataset/` | Layout + examples (**no large `.splat` binaries** in git) |
 
 ---
 
 ## License
 
-MIT (see `LICENSE` if present; otherwise follow your institution’s default).
+MIT (see `LICENSE`).

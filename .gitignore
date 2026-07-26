@@ -9,3 +9,12 @@ __pycache__/
 *.log
 logs/
 dataset/toy_example/20_lod/**/*.splat
+dataset/**/*.splat
+dataset/**/*.ksplat
+# Paper figures / result dumps must not enter the anonymous mirror
+analysis_and_plotting/
+**/results/
+**/*_CLAIM_*.md
+**/*_SYNTHESIS.md
+*.csv
+!experiments/**/requirements.txt

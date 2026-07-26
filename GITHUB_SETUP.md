@@ -1,33 +1,17 @@
-# Publishing to GitHub (required for Anonymous GitHub mirror)
+# Publishing for Anonymous GitHub
 
-The [Anonymous GitHub](https://anonymous.4open.science) “Anonymize your repository” form expects a **public GitHub repository URL**. The coding assistant **cannot** log into your GitHub account or click “New repository” for you.
-
-## Option A — GitHub website
-
-1. Create a **new public** repository (e.g. `VPAP-WT3DGS`).
-2. Do **not** add a README/license on GitHub if you already have them locally (avoid merge hassle).
-3. In this folder:
+The [Anonymous GitHub](https://anonymous.4open.science) form expects a **public** Git repository URL. Strip author identity before citing the anonymous link in a double-blind submission.
 
 ```bash
 cd VPAP-WT3DGS-artifact
-git init
-git add .
-git commit -m "Initial VPAP-WT3DGS artifact"
-git branch -M main
-git remote add origin https://github.com/<YOUR_USER>/<REPO>.git
-git push -u origin main
+git add -A
+git status   # confirm: no analysis_and_plotting/, no logs/, no .splat, no personal IPs
+git commit -m "Update artifact: C4–C6 drivers; remove plotting tree"
+git push origin main
 ```
 
-4. Paste `https://github.com/<YOUR_USER>/<REPO>` into Anonymous GitHub.
+Then refresh the Anonymous GitHub mirror (dashboard → update / re-anonymize if required) and keep citing only:
 
-## Option B — GitHub CLI (`gh`)
+`https://anonymous.4open.science/r/<ANON_ID>/`
 
-```bash
-cd VPAP-WT3DGS-artifact
-git init
-git add .
-git commit -m "Initial VPAP-WT3DGS artifact"
-gh repo create VPAP-WT3DGS --public --source=. --remote=origin --push
-```
-
-Use a **double-blind–safe** account or organization if your venue requires it; follow the conference’s anonymity rules.
+Do not put author names, affiliations, or institutional emails in README, commits intended for the anonymous view, or committed configs.

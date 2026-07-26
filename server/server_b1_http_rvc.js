@@ -3,7 +3,9 @@
  *
  * The reported B1 evaluation uses Caddy with protocols h1 only, static tiles under /assets/...,
  * and client-side tile selection (useLocalRVC: true, empty rcServerAddress), as in the authors’
- * campus2_bounding_boxes-HTTP1.1 + slm2viewer_HTTP1.1 layout. See server/Caddyfile.b1.example.
+ * Optional Node shim for WebSocket RVC during HTTP pull debugging only.
+ * Paper B1/B2 use client-side RVC with empty rcServerAddress (see server/Caddyfile.b1.example).
+ */
  *
  * This Node process exists for integrations that drive the extracted SLM2Loader with *server-side*
  * WebSocket RVC (useLocalRVC: false). The WebSocket mount path defaults to "/rvc" and is only
