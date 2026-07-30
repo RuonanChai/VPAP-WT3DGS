@@ -896,15 +896,19 @@ async function pushSingleTile(session, tile, retryCount = 0) {
       // ignore .closed probe errors
     }
 
+    // higher sendOrder value = earlier service (@fails-components/webtransport)
+    const OMEGA = 10000;
+    const KAPPA = 1000;
     const vpap = tile.vpapScore ?? 0.5;
     const dist = tile.distance ?? 9999;
+    const p = Math.min(1, Math.max(0, Number(vpap) || 0));
     let sendOrder;
     switch (SCHEDULE_POLICY) {
       case 'WTS-N':
         sendOrder = BigInt(0);
         break;
       case 'WTS-L':
-        sendOrder = BigInt(tile.lod * 10000);
+        sendOrder = BigInt(OMEGA * (4 - tile.lod));
         break;
       case 'WTS-D':
         sendOrder = BigInt(Math.floor(dist));
@@ -914,7 +918,7 @@ async function pushSingleTile(session, tile, retryCount = 0) {
         break;
       case 'WTS-V':
       default:
-        sendOrder = BigInt(tile.lod * 10000 + Math.floor((1 - vpap) * 1000));
+        sendOrder = BigInt(OMEGA * (4 - tile.lod) + Math.floor(KAPPA * p));
         break;
     }
     const tileStream = await session.createUnidirectionalStream({

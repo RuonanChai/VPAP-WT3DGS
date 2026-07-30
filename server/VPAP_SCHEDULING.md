@@ -22,12 +22,14 @@ This matches the paper’s **viewport / saliency** term in the priority model.
 4. **QUIC / WebTransport**: each chunk is one **unidirectional** stream created with:
 
 ```javascript
+const OMEGA = 10000, KAPPA = 1000;
 const vpap = tile.vpapScore ?? 0.5;
-const sendOrder = BigInt(tile.lod * 10000 + Math.floor((1 - vpap) * 1000));
+const p = Math.min(1, Math.max(0, Number(vpap) || 0));
+const sendOrder = BigInt(OMEGA * (4 - tile.lod) + Math.floor(KAPPA * p));
 await session.createUnidirectionalStream({ sendOrder, sendGroup: null });
 ```
 
-**Smaller `sendOrder` ⇒ higher send priority** under the scheduler used by `@fails-components/webtransport`. LOD is encoded in the high-order part (`lod * 10000`); viewport score refines ordering within the same LOD via `(1 - vpap) * 1000`.
+**Larger `sendOrder` ⇒ earlier service** under the scheduler used by `@fails-components/webtransport`. LOD precedence uses `OMEGA * (4 - lod)` so L1 (coarse) outranks L4 (fine); within a LOD tier, higher utility `p` raises `sendOrder` via `floor(KAPPA * p)`.
 
 ## C2 scheduling ablation (`VPAP_SCHEDULE_POLICY`)
 
@@ -36,10 +38,10 @@ Set **`VPAP_SCHEDULE_POLICY`** before starting `server_vpap.js` (see `experiment
 | Policy | Env value | Tile sort order | `sendOrder` |
 |--------|-----------|-----------------|-------------|
 | WTS-N | `none` | FIFO (no reorder) | `0` |
-| WTS-L | `lod` | Coarse-to-fine LOD | `lod * 10000` |
+| WTS-L | `lod` | Coarse-to-fine LOD | `OMEGA * (4 - lod)` |
 | WTS-D | `dist` | Nearest first | `floor(distance)` |
 | WTS-F | `frustum` | In-frustum first, then distance | `(in_view ? 0 : 50000) + floor(distance)` |
-| WTS-V | `vpap` | LOD ascending, then utility descending | `lod * 10000 + floor((1-vpap)*1000)` |
+| WTS-V | `vpap` | LOD ascending, then utility descending | `OMEGA * (4 - lod) + floor(KAPPA * p)` |
 
 All variants share the same WebTransport transport, locked 300-tile reference set, and client telemetry schema.
 
